@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         智龙迷城战友网jQ修复
 // @namespace    http://www.mapaler.com/
-// @version      1.2
+// @version      1.3
 // @description  解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author       Mapaler <mapaler@163.com>
 // @copyright    2019+, Mapaler <mapaler@163.com>
 // @icon         https://pad.skyozora.com/images/egg.ico
 // @include      *://pad.skyozora.com/*
-// @resource     jquery  http://libs.baidu.com/jquery/1.8.3/jquery.min.js
+// @resource     jquery  https://libs.baidu.com/jquery/1.8.3/jquery.min.js
 // @grant        GM_getResourceText
 // @grant        unsafeWindow
 // @run-at       document-start
@@ -16,46 +16,19 @@
 (function() {
 	'use strict';
 
-//大数字缩短长度
-Number.prototype.bigNumberToString = function() {
-    let numTemp = this.valueOf();
-    if (!numTemp) return "0";
-    const grouping = Math.pow(10, 4);
-    const unit = ['', '万', '亿', '兆', '京', '垓'];
-    const numParts = [];
-    do {
-        numParts.push(numTemp % grouping);
-        numTemp = Math.floor(numTemp / grouping);
-    } while (numTemp > 0 && numParts.length < (unit.length - 1))
-    if (numTemp > 0) {
-        numParts.push(numTemp);
-    }
-    let numPartsStr = numParts.map((num, idx) => {
-        if (num > 0) {
-            return (num < 1e3 ? "零" : "") + num + unit[idx];
-        } else
-            return "零";
-    });
-
-    numPartsStr.reverse(); //反向
-    let outStr = numPartsStr.join("");
-    outStr = outStr.replace(/(^零+|零+$)/g, ''); //去除开头的零
-    outStr = outStr.replace(/零{2,}/g, '零'); //去除多个连续的零
-    return outStr;
-}
+	const MutationObserver = unsafeWindow.MutationObserver;
 
 	//监听head的加载，代码来源于 EhTagSyringe
 	const headLoaded = new Promise(function (resolve, reject) {
-		if(unsafeWindow.document.head && unsafeWindow.document.head.nodeName == "HEAD"){
-			resolve(unsafeWindow.document.head);
+		if(document.head && document.head.nodeName == "HEAD") {
+			console.log("已经有head");
+			resolve(document.head);
 		}else{
 			//监听DOM变化
-			MutationObserver = window.MutationObserver;
 			let observer = new MutationObserver(function(mutations) {
-				for(let i in mutations){
-					let mutation = mutations[i];
+				for (const mutation of mutations) {
 					//监听到HEAD 结束
-					if(mutation.target.nodeName == "HEAD"){
+					if(mutation.target.nodeName === "HEAD") {
 						observer.disconnect();
 						resolve(mutation.target);
 						break;
@@ -73,23 +46,51 @@ Number.prototype.bigNumberToString = function() {
 		jq.type = "text/javascript";
 		jq.innerHTML = GM_getResourceText("jquery");
 		head.appendChild(jq);
-	})
+	});
 
-	//启动器
+	//大数字缩短长度
+	Number.prototype.bigNumberToString = function() {
+		let numTemp = this.valueOf();
+		if (!numTemp) return "0";
+		const grouping = Math.pow(10, 4);
+		const unit = ['', '万', '亿', '兆', '京', '垓'];
+		const numParts = [];
+		do {
+			numParts.push(numTemp % grouping);
+			numTemp = Math.floor(numTemp / grouping);
+		} while (numTemp > 0 && numParts.length < (unit.length - 1))
+		if (numTemp > 0) {
+			numParts.push(numTemp);
+		}
+		let numPartsStr = numParts.map((num, idx) => {
+			if (num > 0) {
+				return (num < 1e3 ? "零" : "") + num + unit[idx];
+			} else
+				return "零";
+		});
+
+		numPartsStr.reverse(); //反向
+		let outStr = numPartsStr.join("");
+		outStr = outStr.replace(/(^零+|零+$)/g, ''); //去除开头的零
+		outStr = outStr.replace(/零{2,}/g, '零'); //去除多个连续的零
+		return outStr;
+	}
+
 	const bootstrap = function(){
+		//去除禁止复制内容的限制
 		unsafeWindow.$('#StageInfo').bind('click cut copy paste', function(event) {
 			unsafeWindow.$('#StageInfo').unbind(); //调用jQ自身的去掉绑定
 		});
 		const styleDom = document.body.appendChild(document.createElement("style"));
-		styleDom.innerHTML = `
-		* {
-			-webkit-touch-callout: unset !important;
-			-webkit-user-select: unset !important;
-			-khtml-user-select: unset !important;
-			-moz-user-select: unset !important;
-			-ms-user-select: unset !important;
-			user-select: unset !important;
-		}`;
+		styleDom.innerHTML = `* {
+	-webkit-touch-callout: unset !important;
+	-webkit-user-select: unset !important;
+	-khtml-user-select: unset !important;
+	-moz-user-select: unset !important;
+	-ms-user-select: unset !important;
+	user-select: unset !important;
+}`;
+		//大数字加上中文字符
 		const stageDetail = document.body.querySelector("#StageInfo>table:nth-of-type(2)");
 		if (stageDetail)
 		{
@@ -104,7 +105,7 @@ Number.prototype.bigNumberToString = function() {
 					numberTds.push(tds[5]);
 				}
 			}
-			
+
 			for (let td of numberTds)
 			{
 				if (/[\d,\-]/g.test(td.textContent))
