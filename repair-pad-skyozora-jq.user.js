@@ -1,16 +1,20 @@
 // ==UserScript==
-// @name         智龙迷城战友网jQ修复
-// @namespace    http://www.mapaler.com/
-// @version      1.3
-// @description  解决无翻墙情况下智龙迷城战友网无法展开详情问题
-// @author       Mapaler <mapaler@163.com>
-// @copyright    2019+, Mapaler <mapaler@163.com>
-// @icon         https://pad.skyozora.com/images/egg.ico
-// @include      *://pad.skyozora.com/*
-// @resource     jquery  https://libs.baidu.com/jquery/1.8.3/jquery.min.js
-// @grant        GM_getResourceText
-// @grant        unsafeWindow
-// @run-at       document-start
+// @name		智龙迷城战友网jQ修复
+// @namespace	http://www.mapaler.com/
+// @version		1.4
+// @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
+// @author		Mapaler <mapaler@163.com>
+// @copyright	2019+, Mapaler <mapaler@163.com>
+// @icon		https://pad.skyozora.com/images/egg.ico
+// @include		*://pad.skyozora.com/*
+// @resource	jquery  https://libs.baidu.com/jquery/1.8.3/jquery.min.js
+// @resource	opencc-js-data				https://cdn.jsdelivr.net/npm/opencc-js@1.0.3/data.min.js
+// @resource	opencc-js-data.cn2t			https://cdn.jsdelivr.net/npm/opencc-js@1.0.3/data.cn2t.min.js
+// @resource	opencc-js-data.t2cn			https://cdn.jsdelivr.net/npm/opencc-js@1.0.3/data.t2cn.min.js
+// @resource	opencc-js-bundle-browser	https://cdn.jsdelivr.net/npm/opencc-js@1.0.3/bundle-browser.min.js
+// @grant		GM_getResourceText
+// @grant		unsafeWindow
+// @run-at		document-start
 // ==/UserScript==
 
 (function() {
@@ -21,7 +25,6 @@
 	//监听head的加载，代码来源于 EhTagSyringe
 	const headLoaded = new Promise(function (resolve, reject) {
 		if(document.head && document.head.nodeName == "HEAD") {
-			console.log("已经有head");
 			resolve(document.head);
 		}else{
 			//监听DOM变化
@@ -41,11 +44,19 @@
 
 	//head加载后添加国内的JQ源
 	headLoaded.then(function (head) {
-		const jq = document.createElement("script");
-		jq.id = "user-jQuery";
-		jq.type = "text/javascript";
-		jq.innerHTML = GM_getResourceText("jquery");
-		head.appendChild(jq);
+		[
+			'jquery',
+			'opencc-js-data',
+			'opencc-js-data.cn2t',
+			'opencc-js-data.t2cn',
+			'opencc-js-bundle-browser',
+		].forEach(resName=>{
+			const script = document.createElement("script");
+			script.id = resName;
+			script.type = "text/javascript";
+			script.innerHTML = GM_getResourceText(resName);
+			head.appendChild(script);
+		});
 	});
 
 	//大数字缩短长度
@@ -89,7 +100,22 @@
 	-moz-user-select: unset !important;
 	-ms-user-select: unset !important;
 	user-select: unset !important;
+	font-family: "Microsoft Yahei","Microsoft JhengHei","Source Han Sans",Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic !important;
 }`;
+
+		if (OpenCC)
+		{
+			document.title = OpenCC.Converter({ from: 'jp', to: 'cn' })(document.title);
+			// 将繁体中文（香港）转换为简体中文（中国大陆）
+			const converter = OpenCC.Converter({ from: 'hk', to: 'cn' });
+			// 设置转换起点为根节点，即转换整个页面
+			const rootNode = document.documentElement;
+			document.body.lang = 'zh-HK';
+			// 将所有 zh-HK 标签转为 zh-CN 标签
+			const HTMLConvertHandler = OpenCC.HTMLConverter(converter, rootNode, 'zh-HK', 'zh-CN');
+			HTMLConvertHandler.convert(); // 开始转换  -> 汉语 
+		}
+
 		//大数字加上中文字符
 		const stageDetail = document.body.querySelector("#StageInfo>table:nth-of-type(2)");
 		if (stageDetail)
