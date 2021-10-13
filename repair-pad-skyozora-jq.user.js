@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网jQ修复
 // @namespace	http://www.mapaler.com/
-// @version		1.4
+// @version		1.5
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -25,6 +25,7 @@
 	//监听head的加载，代码来源于 EhTagSyringe
 	const headLoaded = new Promise(function (resolve, reject) {
 		if(document.head && document.head.nodeName == "HEAD") {
+			console.log("已经有head");
 			resolve(document.head);
 		}else{
 			//监听DOM变化
@@ -103,18 +104,15 @@
 	font-family: "Microsoft Yahei","Microsoft JhengHei","Source Han Sans",Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic !important;
 }`;
 
-		if (OpenCC)
-		{
-			document.title = OpenCC.Converter({ from: 'jp', to: 'cn' })(document.title);
-			// 将繁体中文（香港）转换为简体中文（中国大陆）
-			const converter = OpenCC.Converter({ from: 'hk', to: 'cn' });
-			// 设置转换起点为根节点，即转换整个页面
-			const rootNode = document.documentElement;
-			document.body.lang = 'zh-HK';
-			// 将所有 zh-HK 标签转为 zh-CN 标签
-			const HTMLConvertHandler = OpenCC.HTMLConverter(converter, rootNode, 'zh-HK', 'zh-CN');
-			HTMLConvertHandler.convert(); // 开始转换  -> 汉语 
-		}
+		document.title = OpenCC.Converter({ from: 'jp', to: 'cn' })(document.title);
+		// 将繁体中文（香港）转换为简体中文（中国大陆）
+		const converter = OpenCC.Converter({ from: 'hk', to: 'cn' });
+		// 设置转换起点为根节点，即转换整个页面
+		const rootNode = document.documentElement;
+		document.body.lang = 'zh-HK';
+		// 将所有 zh-HK 标签转为 zh-CN 标签
+		const HTMLConvertHandler = OpenCC.HTMLConverter(converter, rootNode, 'zh-HK', 'zh-CN');
+		HTMLConvertHandler.convert(); // 开始转换  -> 汉语
 
 		//大数字加上中文字符
 		const stageDetail = document.body.querySelector("#StageInfo>table:nth-of-type(2)");
@@ -134,9 +132,9 @@
 
 			for (let td of numberTds)
 			{
-				if (/[\d,\-]/g.test(td.textContent))
+				if (/^[\d,\-]+$/g.test(td.textContent.trim()))
 				{
-					const num = parseInt(td.textContent.replace(/,/g,""));
+					const num = parseInt(td.textContent.trim().replace(/,/g,""));
 					td.textContent = num.bigNumberToString();
 				}
 			}
