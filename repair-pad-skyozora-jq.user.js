@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网jQ修复
 // @namespace	http://www.mapaler.com/
-// @version		1.7
+// @version		1.8
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -116,25 +116,39 @@
 		HTMLConvertHandler.convert(); // 开始转换  -> 汉语
 
 		//====大数字加上中文字符====
-		const stageDetail = document.body.querySelector("#StageInfo>table:nth-of-type(2)");
-		if (stageDetail)
+		if (/^\/stage\//.test(location.pathname))
 		{
-			const centerRows = stageDetail.tBodies[0].querySelectorAll(":scope>tr[align=\"center\"]:not(:first-child)");
-			let numberTds = [];
-			for (let tr of centerRows)
+			const stageDetail = document.body.querySelector("#StageInfo>table:nth-of-type(2)");
+			if (stageDetail)
 			{
-				let tds = tr.querySelectorAll(":scope>td:not([rowspan])");
-				if (tds.length>5)
+				//HP和防御
+				const centerRows = stageDetail.tBodies[0].querySelectorAll(":scope>tr[align=\"center\"]:not(:first-child)");
+				for (let tr of centerRows)
 				{
-					numberTds.push(tds[0]); //血量
-					numberTds.push(tds[3]); //攻击
-					numberTds.push(tds[5]); //防御
+					let tds = tr.querySelectorAll(":scope>td:not([rowspan])");
+					if (tds.length>5)
+					{
+						domBigNumToString(tds[0]); //血量
+						domBigNumToString(tds[0]); //攻击
+						domBigNumToString(tds[0]); //防御
+					}
 				}
-			}
-
-			for (let td of numberTds)
-			{
-				domBigNumToString(td);
+	
+				//先制数字
+				const leftRows = stageDetail.tBodies[0].querySelectorAll(":scope>tr[align=\"left\"]");
+				for (let tr of leftRows)
+				{
+					let skillContent = tr.querySelector(":scope [id^=skill]");
+					console.log(skillContent || tr);
+					domBigNumToString(skillContent || tr);
+					let skillDamages = tr.querySelectorAll(":scope .skill_demage");
+					for (let skillDamage of skillDamages)
+					{
+						domBigNumToString(skillDamage);
+					}
+				}
+				
+				//伤害数字
 			}
 		}
 
