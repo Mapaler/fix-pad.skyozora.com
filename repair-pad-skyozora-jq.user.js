@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网jQ修复
 // @namespace	http://www.mapaler.com/
-// @version		1.8.1
+// @version		1.8.2
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -139,7 +139,6 @@
 				for (let tr of leftRows)
 				{
 					let skillContent = tr.querySelector(":scope [id^=skill]:not([id^=skill7777])") || tr.querySelector("td");
-					console.log(skillContent);
 					if (skillContent) domBigNumToString(skillContent);
 
 					//伤害数字
