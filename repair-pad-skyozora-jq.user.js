@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name		智龙迷城战友网jQ修复
 // @namespace	http://www.mapaler.com/
-// @version		1.8.2
+// @version		1.8.3
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
 // @icon		https://pad.skyozora.com/images/egg.ico
-// @include		*://pad.skyozora.com/*
+// @match		*://pad.skyozora.com/*
 // @resource	jquery  https://libs.baidu.com/jquery/1.8.3/jquery.min.js
 // @resource	opencc-js-data				https://cdn.jsdelivr.net/npm/opencc-js@1.0.3/data.min.js
 // @resource	opencc-js-data.cn2t			https://cdn.jsdelivr.net/npm/opencc-js@1.0.3/data.cn2t.min.js
@@ -90,7 +90,7 @@
 
 	const bootstrap = function(){
 		//====去除禁止复制内容的限制====
-		unsafeWindow.$('#StageInfo').bind('click cut copy paste', function(event) {
+		unsafeWindow.$('#StageInfo').parent().bind('click cut copy paste', function(event) {
 			unsafeWindow.$('#StageInfo').unbind(); //调用jQ自身的去掉绑定
 		});
 		const styleDom = document.body.appendChild(document.createElement("style"));
@@ -101,7 +101,7 @@
 	-moz-user-select: unset !important;
 	-ms-user-select: unset !important;
 	user-select: unset !important;
-	font-family: "Microsoft Yahei","Microsoft JhengHei","Source Han Sans",Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic !important;
+	font-family: "Source Han Sans","Microsoft Yahei","Microsoft JhengHei",Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic !important;
 }`;
 
 		//====转简体====
@@ -133,7 +133,7 @@
 						domBigNumToString(tds[0]); //防御
 					}
 				}
-	
+
 				//先制数字
 				const leftRows = stageDetail.tBodies[0].querySelectorAll(":scope>tr[align=\"left\"]");
 				for (let tr of leftRows)
@@ -148,7 +148,6 @@
 						domBigNumToString(skillDamage);
 					}
 				}
-				
 			}
 		}
 
@@ -164,6 +163,9 @@
 				}
 			}
 		}
+
+        //直接打开所有隐藏内容
+        Array.from(document.body.querySelectorAll("[onclick^=open_]")).forEach(i=>i.click());
 	}
 
 	function domBigNumToString(dom)
