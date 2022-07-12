@@ -1,17 +1,17 @@
 // ==UserScript==
 // @name		智龙迷城战友网jQ修复
 // @namespace	http://www.mapaler.com/
-// @version		1.8.4
+// @version		1.8.5
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
 // @icon		https://pad.skyozora.com/images/egg.ico
 // @match		*://pad.skyozora.com/*
-// @resource	jquery https://lib.baomitu.com/jquery/1.8.3/jquery.min.js
-// @resource	opencc-js-data				https://unpkg.com/opencc-js@1.0.3/data.js
-// @resource	opencc-js-data.cn2t			https://unpkg.com/opencc-js@1.0.3/data.cn2t.js
-// @resource	opencc-js-data.t2cn			https://unpkg.com/opencc-js@1.0.3/data.t2cn.js
-// @resource	opencc-js-bundle-browser	https://unpkg.com/opencc-js@1.0.3/bundle-browser.js
+// @resource	jquery						https://lib.baomitu.com/jquery/1.8.3/jquery.min.js
+// @resource	opencc-js-data				https://unpkg.com/opencc-js@1.0.4/data.js
+// @resource	opencc-js-data.cn2t			https://unpkg.com/opencc-js@1.0.4/data.cn2t.js
+// @resource	opencc-js-data.t2cn			https://unpkg.com/opencc-js@1.0.4/data.t2cn.js
+// @resource	opencc-js-bundle-browser	https://unpkg.com/opencc-js@1.0.4/bundle-browser.js
 // @grant		GM_getResourceText
 // @grant		unsafeWindow
 // @run-at		document-start
@@ -44,7 +44,7 @@
 	});
 
 	//head加载后添加国内的JQ源
-	headLoaded.then(function (head) {
+	headLoaded.then(head=>{
 		[
 			'jquery',
 			'opencc-js-data',
@@ -64,7 +64,7 @@
 	Number.prototype.bigNumberToString = function() {
 		let numTemp = this.valueOf();
 		if (!numTemp) return "0";
-		const grouping = 10000;
+		const grouping = 1e4;
 		const unit = ['', '万', '亿', '兆', '京', '垓'];
 		const numParts = [];
 		do {
@@ -79,13 +79,13 @@
 				return (num < 1e3 ? "零" : "") + num + unit[idx];
 			} else {
 				return "零";
-            }
+			}
 		});
 
 		numPartsStr.reverse(); //反向
 		let outStr = numPartsStr.join("");
-		outStr = outStr.replace(/(^零+|零+$)/g, ''); //去除开头的零
-		outStr = outStr.replace(/零{2,}/g, '零'); //去除多个连续的零
+		outStr = outStr.replaceAll(/(^零+|零+$)/g, ''); //去除开头和末尾的零
+		outStr = outStr.replaceAll(/零{2,}/g, '零'); //去除多个连续的零
 		return outStr;
 	}
 
@@ -94,8 +94,8 @@
 		unsafeWindow.$('#StageInfo').parent().bind('click cut copy paste', function(event) {
 			unsafeWindow.$('#StageInfo').unbind(); //调用jQ自身的去掉绑定
 		});
-		const styleDom = document.body.appendChild(document.createElement("style"));
-		styleDom.innerHTML = `* {
+		const styleDom = document.head.appendChild(document.createElement("style"));
+		styleDom.textContent = `* {
 	-webkit-touch-callout: unset !important;
 	-webkit-user-select: unset !important;
 	-khtml-user-select: unset !important;
@@ -119,13 +119,13 @@
 		HTMLConvertHandler.convert(); // 开始转换  -> 汉语
 
 		//====大数字加上中文字符====
-        //地下城页面
+		//地下城页面
 		if (/^\/stage\//.test(location.pathname))
 		{
 			const stageTitle = document.body.querySelector("#StageInfo>h2");
-            stageTitle.lang = 'jp';
-            const HTMLConvertHandler = OpenCC.HTMLConverter(converterJP2CN, stageTitle, 'jp', 'zh-CN');
-            HTMLConvertHandler.convert(); // 开始转换  -> 汉语
+			stageTitle.lang = 'jp';
+			const HTMLConvertHandler = OpenCC.HTMLConverter(converterJP2CN, stageTitle, 'jp', 'zh-CN');
+			HTMLConvertHandler.convert(); // 开始转换  -> 汉语
 
 			const stageDetail = document.body.querySelector("#StageInfo>table:nth-of-type(2)");
 			if (stageDetail)
@@ -147,10 +147,10 @@
 				const leftRows = stageDetail.tBodies[0].querySelectorAll(":scope>tr[align=\"left\"]");
 				for (let tr of leftRows)
 				{
-					let skillNames = Array.from(tr.querySelectorAll(":scope .skill"));
-                    for (let skillName of skillNames) {
-                        if (skillName.nextSibling) domBigNumToString(skillName.nextSibling);
-                    }
+					let skillNames = tr.querySelectorAll(":scope .skill");
+					for (let skillName of skillNames) {
+						if (skillName.nextSibling) domBigNumToString(skillName.nextSibling);
+					}
 
 					//伤害数字
 					let skillDamages = tr.querySelectorAll(":scope .skill_demage");
@@ -160,10 +160,10 @@
 					}
 				}
 			}
-            //直接打开所有隐藏内容
-            Array.from(document.body.querySelectorAll("[onclick^=open_]")).forEach(i=>i.click());
+			//直接打开所有隐藏内容
+			Array.from(document.body.querySelectorAll("[onclick^=open_]")).forEach(i=>i.click());
 		}
-        //新闻页面，主要是针对于8人本页面
+		//新闻页面，主要是针对于8人本页面
 		if (/^\/news\//.test(location.pathname))
 		{
 			const contentTables = Array.from(document.body.querySelectorAll(".content>table"));
@@ -176,30 +176,29 @@
 				}
 			}
 		}
-
 	}
 
 	function domBigNumToString(dom)
 	{
 		const regOriginal = /\b-?\d+(?:,\d{3})*\b/g;
 
-        if (dom.nodeType === Node.TEXT_NODE) {
-            textNodeConvertNumber(dom);
-        } else {
-            let nodes = Array.from(dom.childNodes);
-            nodes = nodes.filter(node=>node.nodeType === Node.TEXT_NODE);
-            for (let textNode of nodes)
-            {
-                textNodeConvertNumber(textNode);
-            }
-        }
-        //在纯文本node内转换数字
-        function textNodeConvertNumber(textNode) {
+		if (dom.nodeType === Node.TEXT_NODE) {
+			textNodeConvertNumber(dom);
+		} else {
+			let nodes = Array.from(dom.childNodes);
+			nodes = nodes.filter(node=>node.nodeType === Node.TEXT_NODE);
+			for (let textNode of nodes)
+			{
+				textNodeConvertNumber(textNode);
+			}
+		}
+		//在纯文本node内转换数字
+		function textNodeConvertNumber(textNode) {
 			textNode.nodeValue = textNode.nodeValue.trim()
 				.replace(new RegExp(regOriginal), match=>{
 					return parseInt(match.replaceAll(",",""), 10).bigNumberToString();
 				});
-        }
+		}
 	}
 
 	//加载document后执行启动器
