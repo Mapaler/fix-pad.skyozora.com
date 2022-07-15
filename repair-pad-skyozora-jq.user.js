@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网jQ修复
 // @namespace	http://www.mapaler.com/
-// @version		1.8.5
+// @version		1.8.6
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -123,9 +123,12 @@
 		if (/^\/stage\//.test(location.pathname))
 		{
 			const stageTitle = document.body.querySelector("#StageInfo>h2");
-			stageTitle.lang = 'jp';
-			const HTMLConvertHandler = OpenCC.HTMLConverter(converterJP2CN, stageTitle, 'jp', 'zh-CN');
-			HTMLConvertHandler.convert(); // 开始转换  -> 汉语
+			if (stageTitle)
+			{
+				stageTitle.lang = 'jp';
+				const HTMLConvertHandler = OpenCC.HTMLConverter(converterJP2CN, stageTitle, 'jp', 'zh-CN');
+				HTMLConvertHandler.convert(); // 开始转换  -> 汉语
+			}
 
 			const stageDetail = document.body.querySelector("#StageInfo>table:nth-of-type(2)");
 			if (stageDetail)
