@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网jQ修复
 // @namespace	http://www.mapaler.com/
-// @version		1.8.6
+// @version		1.9.0
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -13,7 +13,6 @@
 // @resource	opencc-js-data.t2cn			https://unpkg.com/opencc-js@1.0.4/data.t2cn.js
 // @resource	opencc-js-bundle-browser	https://unpkg.com/opencc-js@1.0.4/bundle-browser.js
 // @resource	icons						https://github.com/Mapaler/fix-pad.skyozora.com/raw/master/icons-symbol.svg
-// @resource     icon https://ec.nintendo.com/c/svg/images.svg
 // @grant		GM_getResourceText
 // @grant		unsafeWindow
 // @run-at		document-start
@@ -93,6 +92,8 @@
 	}
 	
 	const bootstrap = function(){
+		document.styleSheets[0].deleteRule(1);
+		document.styleSheets[0].deleteRule(0);
 		
 		//插入总svg
 		const svgText = GM_getResourceText("icons"); //将svg文本读取出来
@@ -131,13 +132,10 @@
 		const styleDom = document.head.appendChild(document.createElement("style"));
 		styleDom.textContent = `
 * {
-	-webkit-touch-callout: unset !important;
-	-webkit-user-select: unset !important;
-	-khtml-user-select: unset !important;
-	-moz-user-select: unset !important;
-	-ms-user-select: unset !important;
-	user-select: unset !important;
-	font-family: "Microsoft Yahei", "Microsoft JhengHei", "Source Han Sans", Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic !important;
+	font-family: "Microsoft Yahei", "Microsoft JhengHei", "Source Han Sans", Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic;
+}
+body {
+	background:#222 ;
 }
 .hide {
 	display: none;
@@ -149,9 +147,14 @@
 	vertical-align: text-bottom;
 }
 .svg-icon text {
+	font-family: "FOT-Kurokane Std EB", "Arial Black";
 	font-size: 1.1em;
 	font-weight: bold;
-	text-shadow: 0 0 1px black;
+	text-shadow: 0 0 1px black,1px 1px 1px black,-1px -1px 1px black;
+    text-anchor: middle;
+    /* 文本水平居中 */
+    dominant-baseline: middle;
+    /* 文本垂直居中 */
 }
 `;
 
@@ -280,8 +283,8 @@
 				const svg = svgIcon('symbol-超根性');
 				const text = document.createElementNS(svgNS,'text');
 				text.textContent = res[1];
-				text.setAttribute("x", "0.3em");
-				text.setAttribute("y", "1.3em");
+				text.setAttribute("x", "50%");
+				text.setAttribute("y", "50%");
 				text.setAttribute("fill", "white");
 				svg.appendChild(text);
 				dom.parentElement.insertBefore(svg, dom);
@@ -295,10 +298,14 @@
 			}
 			if (res = /将\s*(\d+)COMBO\s*或以下时所造成的伤害全部吸收/.exec(dom.nodeValue)) {
 				const svg = svgIcon('symbol-连击吸收');
+				const use = document.createElementNS(svgNS,'use');
+				use.setAttribute("href",`#symbol-回复`);
+				use.setAttribute("transform",`translate(0 5)`);
+				svg.appendChild(use);
 				const text = document.createElementNS(svgNS,'text');
 				text.textContent = res[1];
-				text.setAttribute("x", "0.3em");
-				text.setAttribute("y", "1.3em");
+				text.setAttribute("x", "50%");
+				text.setAttribute("y", "50%");
 				text.setAttribute("fill", "#F7C");
 				svg.appendChild(text);
 				dom.parentElement.insertBefore(svg, dom);
@@ -307,20 +314,33 @@
 				const svg = svgIcon('symbol-盾');
 				const text = document.createElementNS(svgNS,'text');
 				text.textContent = res[1];
-				text.setAttribute("x", "0.3em");
-				text.setAttribute("y", "1.3em");
+				text.setAttribute("x", "50%");
+				text.setAttribute("y", "50%");
 				text.setAttribute("fill", "white");
 				svg.appendChild(text);
 				dom.parentElement.insertBefore(svg, dom);
 			}
-			if (res = /将受到的(.)属性伤害转换成自己的生命值/.exec(dom.nodeValue)) {
-				const svg = svgIcon(`symbol-${res[1]}`);
-				const use = document.createElementNS(svgNS,'use');
-				use.setAttribute("href",`#symbol-回复`);
-				svg.appendChild(use);
-				dom.parentElement.insertBefore(svg, dom);
+			if (res = /将受到的(.+)属性伤害转换成自己的生命值/.exec(dom.nodeValue)) {
+				const attrs = res[1].split("、");
+				for (const attr of attrs) {
+					const svg = svgIcon(`symbol-${attr}`);
+					const use = document.createElementNS(svgNS,'use');
+					use.setAttribute("href",`#symbol-回复`);
+					use.setAttribute("transform",`translate(0 5)`);
+					svg.appendChild(use);
+					dom.parentElement.insertBefore(svg, dom);
+				}
 			}
-			
+			if (res = /受到的(.+)属性伤害减少/.exec(dom.nodeValue)) {
+				const attrs = res[1].split("、");
+				for (const attr of attrs) {
+					const svg = svgIcon('symbol-盾');
+					const use = document.createElementNS(svgNS,'use');
+					use.setAttribute("href",`#symbol-${attr}`);
+					svg.appendChild(use);
+					dom.parentElement.insertBefore(svg, dom);
+				}
+			}
 		}
 	}
 
