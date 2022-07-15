@@ -12,6 +12,8 @@
 // @resource	opencc-js-data.cn2t			https://unpkg.com/opencc-js@1.0.4/data.cn2t.js
 // @resource	opencc-js-data.t2cn			https://unpkg.com/opencc-js@1.0.4/data.t2cn.js
 // @resource	opencc-js-bundle-browser	https://unpkg.com/opencc-js@1.0.4/bundle-browser.js
+// @resource	icons						https://github.com/Mapaler/fix-pad.skyozora.com/raw/master/icons-symbol.svg
+// @resource     icon https://ec.nintendo.com/c/svg/images.svg
 // @grant		GM_getResourceText
 // @grant		unsafeWindow
 // @run-at		document-start
@@ -19,6 +21,7 @@
 
 (function() {
 	'use strict';
+	const svgNS = "http://www.w3.org/2000/svg"; //svg用的命名空间
 
 	const MutationObserver = unsafeWindow.MutationObserver;
 
@@ -88,14 +91,46 @@
 		outStr = outStr.replaceAll(/零{2,}/g, '零'); //去除多个连续的零
 		return outStr;
 	}
-
+	
 	const bootstrap = function(){
+		
+		//插入总svg
+		const svgText = GM_getResourceText("icons"); //将svg文本读取出来
+		const parser = new DOMParser();
+		const iconsSvg = parser.parseFromString(svgText, "image/svg+xml"); //转换成svg文档
+		const svgDoc = iconsSvg.documentElement;
+		svgDoc.setAttribute("class","hide");
+		const iconsImgs = Array.from(svgDoc.childNodes);
+		for (let img of iconsImgs)
+		{
+			const symbol = iconsSvg.createElementNS(svgNS, 'symbol');
+			symbol.id = 'symbol-' + img.id;
+			/*const transformBaseVal = img?.transform?.baseVal;
+			let iX = 0, iY =0;
+			if (transformBaseVal.numberOfItems) {
+				try {
+					const translate = transformBaseVal?.getItem("translate");
+					iX = translate?.matrix?.e;
+					iY = translate?.matrix?.f;
+				} catch (error) {
+					
+				}
+			}
+			symbol.setAttribute('viewBox', [iX, iY, img.width.baseVal.value, img.height.baseVal.value].join(" "));*/
+			symbol.setAttribute('viewBox', [0, 0, 34, 34].join(" "));
+			img.removeAttribute('id');
+			symbol.appendChild(img);
+			svgDoc.appendChild(symbol);
+		}
+		document.body.insertAdjacentElement("afterbegin", svgDoc); //插入body
+
 		//====去除禁止复制内容的限制====
 		unsafeWindow.$('#StageInfo').parent().bind('click cut copy paste', function(event) {
 			unsafeWindow.$('#StageInfo').unbind(); //调用jQ自身的去掉绑定
 		});
 		const styleDom = document.head.appendChild(document.createElement("style"));
-		styleDom.textContent = `* {
+		styleDom.textContent = `
+* {
 	-webkit-touch-callout: unset !important;
 	-webkit-user-select: unset !important;
 	-khtml-user-select: unset !important;
@@ -103,7 +138,22 @@
 	-ms-user-select: unset !important;
 	user-select: unset !important;
 	font-family: "Microsoft Yahei", "Microsoft JhengHei", "Source Han Sans", Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic !important;
-}`;
+}
+.hide {
+	display: none;
+	postion: absolute;
+}
+.svg-icon {
+	width: 2em;
+	height: 2em;
+	vertical-align: text-bottom;
+}
+.svg-icon text {
+	font-size: 1.1em;
+	font-weight: bold;
+	text-shadow: 0 0 1px black;
+}
+`;
 
 		//====转简体====
 		// 将日文汉字转换为简体中文（中国大陆）
@@ -152,7 +202,10 @@
 				{
 					let skillNames = tr.querySelectorAll(":scope .skill");
 					for (let skillName of skillNames) {
-						if (skillName.nextSibling) domBigNumToString(skillName.nextSibling);
+						if (skillName.nextSibling) {
+							domBigNumToString(skillName.nextSibling);
+							domAddIcon(skillName.nextSibling);
+						}
 					}
 
 					//伤害数字
@@ -201,6 +254,73 @@
 				.replace(new RegExp(regOriginal), match=>{
 					return parseInt(match.replaceAll(",",""), 10).bigNumberToString();
 				});
+		}
+	}
+
+	function domAddIcon(dom)
+	{
+		//创建svg图标引用的svg
+		function svgIcon(id) {
+			const svg = document.createElementNS(svgNS,'svg');
+			svg.setAttribute("class","svg-icon");
+			const use = document.createElementNS(svgNS,'use');
+			use.setAttribute("href",`#${id}`);
+			svg.appendChild(use);
+			return svg;
+		}
+		if (dom.nodeType === Node.TEXT_NODE) {
+			let res;
+			if (res = /异常状态（如毒、威吓、破防）无效化/.exec(dom.nodeValue)) {
+				dom.parentElement.insertBefore(svgIcon('symbol-状态盾'), dom);
+			}
+			if (res = /将会以1点HP生还/.exec(dom.nodeValue)) {
+				dom.parentElement.insertBefore(svgIcon('symbol-根性'), dom);
+			}
+			if (res = /将会以(\d+)%HP生还/.exec(dom.nodeValue)) {
+				const svg = svgIcon('symbol-超根性');
+				const text = document.createElementNS(svgNS,'text');
+				text.textContent = res[1];
+				text.setAttribute("x", "0.3em");
+				text.setAttribute("y", "1.3em");
+				text.setAttribute("fill", "white");
+				svg.appendChild(text);
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /单一伤害值.+点以上的伤害(吸收|无效)/.exec(dom.nodeValue)) {
+				const svg = svgIcon('symbol-盾');
+				const use = document.createElementNS(svgNS,'use');
+				use.setAttribute("href",`#symbol-伤害${res[1]}`);
+				svg.appendChild(use);
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /将\s*(\d+)COMBO\s*或以下时所造成的伤害全部吸收/.exec(dom.nodeValue)) {
+				const svg = svgIcon('symbol-连击吸收');
+				const text = document.createElementNS(svgNS,'text');
+				text.textContent = res[1];
+				text.setAttribute("x", "0.3em");
+				text.setAttribute("y", "1.3em");
+				text.setAttribute("fill", "#F7C");
+				svg.appendChild(text);
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /受到的属性伤害减少(\d+)%/.exec(dom.nodeValue)) {
+				const svg = svgIcon('symbol-盾');
+				const text = document.createElementNS(svgNS,'text');
+				text.textContent = res[1];
+				text.setAttribute("x", "0.3em");
+				text.setAttribute("y", "1.3em");
+				text.setAttribute("fill", "white");
+				svg.appendChild(text);
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /将受到的(.)属性伤害转换成自己的生命值/.exec(dom.nodeValue)) {
+				const svg = svgIcon(`symbol-${res[1]}`);
+				const use = document.createElementNS(svgNS,'use');
+				use.setAttribute("href",`#symbol-回复`);
+				svg.appendChild(use);
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			
 		}
 	}
 
