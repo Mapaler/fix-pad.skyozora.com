@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name		智龙迷城战友网jQ修复
+// @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		1.9.1
+// @version		2.0.0
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -12,7 +12,7 @@
 // @resource	opencc-js-data.cn2t			https://unpkg.com/opencc-js@1.0.4/data.cn2t.js
 // @resource	opencc-js-data.t2cn			https://unpkg.com/opencc-js@1.0.4/data.t2cn.js
 // @resource	opencc-js-bundle-browser	https://unpkg.com/opencc-js@1.0.4/bundle-browser.js
-// @resource	icons						https://github.com/Mapaler/fix-pad.skyozora.com/raw/master/icons-symbol.svg
+// @resource	icons						https://github.com/Mapaler/fix-pad.skyozora.com/raw/master/icons-symbol.svg?v=2
 // @grant		GM_getResourceText
 // @grant		unsafeWindow
 // @run-at		document-start
@@ -106,28 +106,20 @@
 		const iconsSvg = parser.parseFromString(svgText, "image/svg+xml"); //转换成svg文档
 		const svgDoc = iconsSvg.documentElement;
 		svgDoc.setAttribute("class","hide");
-		const iconsImgs = Array.from(svgDoc.childNodes);
-		for (let img of iconsImgs)
-		{
-			const symbol = iconsSvg.createElementNS(svgNS, 'symbol');
-			symbol.id = 'symbol-' + img.id;
-			/*const transformBaseVal = img?.transform?.baseVal;
-			let iX = 0, iY =0;
-			if (transformBaseVal.numberOfItems) {
-				try {
-					const translate = transformBaseVal?.getItem("translate");
-					iX = translate?.matrix?.e;
-					iY = translate?.matrix?.f;
-				} catch (error) {
-					
-				}
-			}
-			symbol.setAttribute('viewBox', [iX, iY, img.width.baseVal.value, img.height.baseVal.value].join(" "));*/
-			symbol.setAttribute('viewBox', [0, 0, 34, 34].join(" "));
-			img.removeAttribute('id');
-			symbol.appendChild(img);
-			svgDoc.appendChild(symbol);
-		}
+		const symbols = Array.from(svgDoc.querySelectorAll('symbol'));
+		const [maxWidth, maxHeight] = symbols.reduce(([maxWidth, maxHeight], symble)=>{
+			const img = symble.querySelector('image');
+			return [
+				Math.max(maxWidth, img.width.baseVal.value),
+				Math.max(maxHeight, img.height.baseVal.value)
+			];
+		},[0,0]);
+
+		symbols.forEach(symble=>{
+			const img = symble.querySelector('image');
+			symble.setAttribute('viewBox', [(maxWidth - img.width.baseVal.value) / -2, (maxHeight - img.height.baseVal.value) / -2, maxWidth, maxHeight].join(" "));
+		});
+
 		document.body.insertAdjacentElement("afterbegin", svgDoc); //插入body
 
 		//====去除禁止复制内容的限制====
@@ -153,7 +145,7 @@ body {
 	vertical-align: text-bottom;
 }
 .svg-icon text {
-	font-family: "FOT-Kurokane Std EB", "Arial Black";
+	font-family: "FOT-Kurokane Std EB", "Arial Black" !important;
 	font-size: 1.1em;
 	font-weight: bold;
 	text-shadow: 0 0 1px black,1px 1px 1px black,-1px -1px 1px black;
@@ -266,27 +258,42 @@ body {
 		}
 	}
 
+	SVGSVGElement.prototype.appendSymbleIcon = function(id) {
+		const use = document.createElementNS(svgNS,'use');
+		use.setAttribute("href",`#i-${id}`);
+		this.appendChild(use);
+		return use;
+	}
+
 	function domAddIcon(dom)
 	{
 		//创建svg图标引用的svg
 		function svgIcon(id) {
 			const svg = document.createElementNS(svgNS,'svg');
 			svg.setAttribute("class","svg-icon");
-			const use = document.createElementNS(svgNS,'use');
-			use.setAttribute("href",`#${id}`);
-			svg.appendChild(use);
+			svg.appendSymbleIcon(id);
 			return svg;
 		}
+		function attrIndex(str) {
+			switch (str) {
+				case '火': return 0;
+				case '水': return 1;
+				case '木': return 2;
+				case '光': return 3;
+				case '暗': return 4;
+			}
+		}
+
 		if (dom.nodeType === Node.TEXT_NODE) {
 			let res;
 			if (res = /异常状态（如毒、威吓、破防）无效化/.exec(dom.nodeValue)) {
-				dom.parentElement.insertBefore(svgIcon('symbol-状态盾'), dom);
+				dom.parentElement.insertBefore(svgIcon('abnormal-state-shield'), dom);
 			}
 			if (res = /将会以1点HP生还/.exec(dom.nodeValue)) {
-				dom.parentElement.insertBefore(svgIcon('symbol-根性'), dom);
+				dom.parentElement.insertBefore(svgIcon('resolve'), dom);
 			}
 			if (res = /将会以(\d+)%HP生还/.exec(dom.nodeValue)) {
-				const svg = svgIcon('symbol-超根性');
+				const svg = svgIcon('super-resolve');
 				const text = document.createElementNS(svgNS,'text');
 				text.textContent = res[1];
 				text.setAttribute("x", "50%");
@@ -296,18 +303,13 @@ body {
 				dom.parentElement.insertBefore(svg, dom);
 			}
 			if (res = /单一伤害值.+点以上的伤害(吸收|无效)/.exec(dom.nodeValue)) {
-				const svg = svgIcon('symbol-盾');
-				const use = document.createElementNS(svgNS,'use');
-				use.setAttribute("href",`#symbol-伤害${res[1]}`);
-				svg.appendChild(use);
+				const svg = svgIcon('shield');
+				const frontIcon = svg.appendSymbleIcon(`damage-${res[1]=='吸收'?'absorb':'void'}`);
 				dom.parentElement.insertBefore(svg, dom);
 			}
 			if (res = /将\s*(\d+)COMBO\s*或以下时所造成的伤害全部吸收/.exec(dom.nodeValue)) {
-				const svg = svgIcon('symbol-连击吸收');
-				const use = document.createElementNS(svgNS,'use');
-				use.setAttribute("href",`#symbol-回复`);
-				use.setAttribute("transform",`translate(0 5)`);
-				svg.appendChild(use);
+				const svg = svgIcon('combo-absorb');
+				svg.appendSymbleIcon('recover');
 				const text = document.createElementNS(svgNS,'text');
 				text.textContent = res[1];
 				text.setAttribute("x", "50%");
@@ -317,7 +319,7 @@ body {
 				dom.parentElement.insertBefore(svg, dom);
 			}
 			if (res = /受到的属性伤害减少(\d+)%/.exec(dom.nodeValue)) {
-				const svg = svgIcon('symbol-盾');
+				const svg = svgIcon('shield');
 				const text = document.createElementNS(svgNS,'text');
 				text.textContent = res[1];
 				text.setAttribute("x", "50%");
@@ -328,24 +330,175 @@ body {
 			}
 			if (res = /将受到的(.+)属性伤害转换成自己的生命值/.exec(dom.nodeValue)) {
 				const attrs = res[1].split("、");
-				for (const attr of attrs) {
-					const svg = svgIcon(`symbol-${attr}`);
-					const use = document.createElementNS(svgNS,'use');
-					use.setAttribute("href",`#symbol-回复`);
-					use.setAttribute("transform",`translate(0 5)`);
-					svg.appendChild(use);
+				for (const attrStr of attrs) {
+					const attr = attrIndex(attrStr);
+					const svg = svgIcon(`attr-${attr}`);
+					svg.appendSymbleIcon('recover');
 					dom.parentElement.insertBefore(svg, dom);
 				}
 			}
 			if (res = /受到的(.+)属性伤害减少/.exec(dom.nodeValue)) {
 				const attrs = res[1].split("、");
-				for (const attr of attrs) {
-					const svg = svgIcon('symbol-盾');
-					const use = document.createElementNS(svgNS,'use');
-					use.setAttribute("href",`#symbol-${attr}`);
-					svg.appendChild(use);
+				for (const attrStr of attrs) {
+					const attr = attrIndex(attrStr);
+					const svg = svgIcon('shield');
+					svg.appendSymbleIcon(`attr-${attr}`);
 					dom.parentElement.insertBefore(svg, dom);
 				}
+			}
+			if (res = /技能的?冷却时间(增加|缩短)/.exec(dom.nodeValue)) {
+				const zuo = res[1]=='增加';
+				const svg = svgIcon('skill-boost');
+				const text = document.createElementNS(svgNS,'text');
+				text.textContent = zuo?'-':'+';
+				text.setAttribute("x", "80%");
+				text.setAttribute("y", zuo?"80%":"20%");
+				text.setAttribute("fill", zuo?"lightblue":"yellow");
+				text.setAttribute("style", "font-size: 2em;");
+				svg.appendChild(text);
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /觉醒技能无效化/.exec(dom.nodeValue)) {
+				const svg = svgIcon('awoken-bind');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /无法发动任何主动技能/.exec(dom.nodeValue)) {
+				const svg = svgIcon('skill-bind');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /封锁.+宠物/.exec(dom.nodeValue)) {
+				const svg = svgIcon('member-bind');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /结算时(增加|减少)(\d+)COMBO/.exec(dom.nodeValue)) {
+				const decrease = res[1]=='减少';
+				const svg = svgIcon(`combo-${decrease?'decrease':'increase'}`);
+				const text = document.createElementNS(svgNS,'text');
+				text.textContent = res[2];
+				text.setAttribute("x", "70%");
+				text.setAttribute("y", "40%");
+				text.setAttribute("fill", "white");
+				svg.appendChild(text);
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /宠物的攻击力变成原来的(\d+)%/.exec(dom.nodeValue)) {
+				const decrease = Number(res[1])<100;
+				const svg = svgIcon(`member-atk-${decrease?'decrease':'increase'}`);
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /辅助宠物无效化/.exec(dom.nodeValue)) {
+				const svg = svgIcon('assist-bind');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /宝珠锁定|锁定掉落的宝珠/.exec(dom.nodeValue)) {
+				const svg = svgIcon('lock');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /攻击力提升至/.exec(dom.nodeValue)) {
+				const svg = svgIcon('angry');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /云遮挡宝珠/.exec(dom.nodeValue)) {
+				const svg = svgIcon('cloud');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /无法移动(.+)的宝珠/.exec(dom.nodeValue)) {
+				const svg = svgIcon('immobility');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /(掉落|变成)超暗暗/.exec(dom.nodeValue)) {
+				const svg = svgIcon('super-dark');
+				if (res[1] == '掉落') {
+					svg.appendSymbleIcon(`fall-down`);
+				}
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /宝珠每隔([\d\.]+)秒不断转换/.exec(dom.nodeValue)) {
+				const svg = svgIcon('roulette');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /目前HP(\d+)%的伤害/.exec(dom.nodeValue)) {
+				const fragment = document.createDocumentFragment();
+				fragment.append(`（需要`);
+				const svg = svgIcon('shield');
+				svg.appendSymbleIcon(`text-defense`);
+				fragment.append(svg);
+				fragment.append(`盾>${Math.round((1-100/Number(res[1]))*10000)/100}%）`);
+				dom.parentElement.insertBefore(fragment, dom.nextSibling);
+			}
+			if (res = /掉落(弱体|强)化宝珠/.exec(dom.nodeValue)) {
+				const decline = res[1]=='弱体';
+				const svg = svgIcon(`orb-${decline?'decline':'enhance'}`);
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /天降的宝珠不会产生COMBO/.exec(dom.nodeValue)) {
+				const svg = svgIcon('no-fall-dowm');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /宝珠起手的位置随机固定/.exec(dom.nodeValue)) {
+				const svg = svgIcon('fix-start-position');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /攻击目标被锁定/.exec(dom.nodeValue)) {
+				const svg = svgIcon('fix-target');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /宝珠移动时间变成原来的(\d+)%/.exec(dom.nodeValue)) {
+				const decrease = Number(res[1])<100;
+				const svg = svgIcon(`move-time-${decrease?'decrease':'increase'}`);
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /回复力变成原来的(\d+)%/.exec(dom.nodeValue)) {
+				const decrease = Number(res[1])<100;
+				const svg = svgIcon('attr-5');
+				const frontIcon = svg.appendSymbleIcon(`member-atk-${decrease?'decrease':'increase'}`);
+				frontIcon.setAttribute('transform', 'scale(0.75) translate(10, 10)');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /玩家的HP上限/.exec(dom.nodeValue)) {
+				const svg = svgIcon('change-max-hp');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /随机将1个队员换成队长/.exec(dom.nodeValue)) {
+				const svg = svgIcon('change-leader-position');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /队长会(?:随机)?变成/.exec(dom.nodeValue)) {
+				const svg = svgIcon('change-leader-card');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /宝珠盘面变成/.exec(dom.nodeValue)) {
+				const svg = svgIcon('board-change-size');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /掉落COMBO宝珠/.exec(dom.nodeValue)) {
+				const svg = svgIcon('orb-combo');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /随机转换自身的属性|将自身的属性转换成(.)/.exec(dom.nodeValue)) {
+				const svg = svgIcon('enemy-attr');
+				const attr = res[1] ? attrIndex(res[1]) : 'any';
+				const frontIcon = svg.appendSymbleIcon(`attr-${attr}`);
+				frontIcon.setAttribute('transform', 'scale(0.85) translate(1, 1)');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /回复玩家(\d+)%HP/.exec(dom.nodeValue)) {
+				const svg = svgIcon('heal');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /消除玩家所有BUFF技能效果/.exec(dom.nodeValue)) {
+				const svg = svgIcon('bind');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /变成不会受到任何伤害的状态/.exec(dom.nodeValue)) {
+				const svg = svgIcon('invincible');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /回到可以承受伤害的状态/.exec(dom.nodeValue)) {
+				const svg = svgIcon('invincible');
+				dom.parentElement.insertBefore(svg, dom);
+				const frontIcon = svg.appendSymbleIcon(`bind`);
+				frontIcon.setAttribute('transform', 'translate(0, 5)');
 			}
 		}
 	}
