@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网jQ修复
 // @namespace	http://www.mapaler.com/
-// @version		1.9.0
+// @version		1.9.1
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -23,6 +23,8 @@
 	const svgNS = "http://www.w3.org/2000/svg"; //svg用的命名空间
 
 	const MutationObserver = unsafeWindow.MutationObserver;
+
+	let mobileMode = /\bmobile\b/i.test(navigator.userAgent);
 
 	//监听head的加载，代码来源于 EhTagSyringe
 	const headLoaded = new Promise(function (resolve, reject) {
@@ -92,8 +94,11 @@
 	}
 	
 	const bootstrap = function(){
-		document.styleSheets[0].deleteRule(1);
-		document.styleSheets[0].deleteRule(0);
+		
+		if (!mobileMode) {
+			document.styleSheets[0].deleteRule(1);
+			document.styleSheets[0].deleteRule(0);
+		}
 		
 		//插入总svg
 		const svgText = GM_getResourceText("icons"); //将svg文本读取出来
@@ -132,7 +137,8 @@
 		const styleDom = document.head.appendChild(document.createElement("style"));
 		styleDom.textContent = `
 * {
-	font-family: "Microsoft Yahei", "Microsoft JhengHei", "Source Han Sans", Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic;
+	font-family: "Microsoft Yahei", "Microsoft JhengHei", "Source Han Sans", Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic !important;
+	color: white;
 }
 body {
 	background:#222 ;
