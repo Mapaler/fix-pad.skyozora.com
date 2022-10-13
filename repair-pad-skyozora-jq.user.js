@@ -12,7 +12,7 @@
 // @resource	opencc-js-data.cn2t			https://unpkg.com/opencc-js@1.0.4/data.cn2t.js
 // @resource	opencc-js-data.t2cn			https://unpkg.com/opencc-js@1.0.4/data.t2cn.js
 // @resource	opencc-js-bundle-browser	https://unpkg.com/opencc-js@1.0.4/bundle-browser.js
-// @resource	icons						https://github.com/Mapaler/fix-pad.skyozora.com/raw/master/icons-symbol.svg?v=2
+// @resource	icons						https://raw.githubusercontent.com/Mapaler/fix-pad.skyozora.com/master/icons-symbol.svg
 // @grant		GM_getResourceText
 // @grant		unsafeWindow
 // @run-at		document-start
