@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.1.2
+// @version		2.1.3
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -366,30 +366,49 @@ body {
 					dom.parentElement.insertBefore(svg, dom);
 				}
 			}
-			if (res = /将(?:受到的)?(随机)?(.+)属性伤害转换成自己的生命值/.exec(dom.nodeValue)) {
-				const random = Boolean(res[1]); //是否随机
-				const normalSplit = res[2].includes('、'); //是否是顿号的普通分割
-				const attrs = res[2].split(normalSplit ? "、" : "/" );
-				for (let i=0;i<attrs.length;i++) {
-					let attrStr = attrs[i], attrArr = [];
-					let multiReg = /「(.+?)」/mg.exec(attrStr);
-					if (multiReg) {
-						let str = multiReg[1];
-						attrArr = (str.includes('/') ? str.split('/') : Array.from(str)).map(attrIndex);
-					} else {
-						attrArr.push(attrIndex(attrStr));
+			if (res = /将(?:受到的)?(随机一种|其中一种|1种)?(.*)属性伤害转换成自己的生命值/.exec(dom.nodeValue)) {
+				if (Boolean(res[1])) { //如果随机
+				   const svg = svgIcon(`attr-any`);
+				   svg.appendSymbleIcon('recover');
+				   dom.parentElement.insertBefore(svg, dom);
+				   return;
+				}
+				let attrsStr = res[2];
+				const hasMultiGroup = /「.+」/.test(attrsStr);
+				//multiGroupTypeA 「火水」、「水木」
+				//multiGroupTypeB 「火/水」、「水/木」
+				//multiGroupTypeC 「火水/水木」
+				const multiGroupTypeC = /^「([^「」]+)」$/.exec(attrsStr);
+				if (multiGroupTypeC) attrsStr = multiGroupTypeC[1];
+
+				const normalSplit = attrsStr.includes('、'); //是否是顿号的普通分割
+				let attrs = attrsStr.split(normalSplit ? "、" : "/" ); //用顿号或者/分割第一次
+				attrs = attrs.map(attrStr=>{
+					const multiGroupTypeAB = /「(.+?)」/mg.exec(attrStr);
+					if (multiGroupTypeAB) {
+						attrStr = multiGroupTypeAB[1];
 					}
+					if (attrStr.length > 1) { //如果不止一个属性
+						return (attrStr.includes('/') ? attrStr.split('/') : Array.from(attrStr)).map(attrIndex); //子组分割
+					} else {
+						return attrIndex(attrStr);
+					}
+				});
+				if (!hasMultiGroup) attrs = [attrs]; //如果并没有多组，则嵌入到一个单元素数组
+				const fragment = document.createDocumentFragment();
+				for (let i=0;i<attrs.length;i++) {
+					let attrArr = attrs[i];
 					
 					attrArr.forEach(attr=>{
-						if (random) attr = 'any';
 						const svg = svgIcon(`attr-${attr}`);
 						svg.appendSymbleIcon('recover');
-						dom.parentElement.insertBefore(svg, dom);
+						fragment.append(svg);
 					});
-					if (multiReg && i<(attrs.length-1)) {
-						dom.parentElement.insertBefore(document.createTextNode('/'), dom);
+					if (i<(attrs.length-1)) {
+						fragment.append('/');
 					}
 				}
+				dom.parentElement.insertBefore(fragment, dom);
 			}
 			if (res = /技能的?冷却时间(增加|缩短)/.exec(dom.nodeValue)) {
 				const zuo = res[1]=='增加';
@@ -434,7 +453,7 @@ body {
 				frontIcon.setAttribute('transform', `scale(0.75) translate(${member ? 4 : 10}, ${member ? 4 : (decrease? 10 : 0)})`);
 				dom.parentElement.insertBefore(svg, dom);
 			}
-			if (res = /回复力变成原来的(\d+)%/.exec(dom.nodeValue)) {
+			if (res = /回复力变成(?:原来的)?(\d+)%?/.exec(dom.nodeValue)) {
 				const decrease = Number(res[1])<100;
 				const svg = svgIcon('attr-5');
 				const frontIcon = svg.appendSymbleIcon(`member-atk-${decrease?'decrease':'increase'}`);
