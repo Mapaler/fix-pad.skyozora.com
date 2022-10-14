@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.0.0
+// @version		2.0.1
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -417,7 +417,9 @@ body {
 				const svg = svgIcon('roulette');
 				dom.parentElement.insertBefore(svg, dom);
 			}
-			if (res = /目前HP(\d+)%的伤害/.exec(dom.nodeValue)) {
+			if (res = /造成玩家目前HP(\d+)%的伤害/.exec(dom.nodeValue)) {
+				const damage = Number(res[1]);
+				if (damage < 100) return; //小于100的重力不需要盾
 				const fragment = document.createDocumentFragment();
 				fragment.append(`（需要`);
 				const svg = svgIcon('shield');
