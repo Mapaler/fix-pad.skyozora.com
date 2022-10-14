@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.0.1
+// @version		2.1.0
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -12,7 +12,8 @@
 // @resource	opencc-js-data.cn2t			https://unpkg.com/opencc-js@1.0.4/data.cn2t.js
 // @resource	opencc-js-data.t2cn			https://unpkg.com/opencc-js@1.0.4/data.t2cn.js
 // @resource	opencc-js-bundle-browser	https://unpkg.com/opencc-js@1.0.4/bundle-browser.js
-// @resource	icons						https://raw.githubusercontent.com/Mapaler/fix-pad.skyozora.com/master/icons-symbol.svg
+// @resource	icons						https://raw.githubusercontent.com/Mapaler/fix-pad.skyozora.com/master/icons-symbol.svg?v=2.1
+//-@resource	icons						http://localhost:8080/icons-symbol.svg?16
 // @grant		GM_getResourceText
 // @grant		unsafeWindow
 // @run-at		document-start
@@ -283,6 +284,23 @@ body {
 				case '暗': return 4;
 			}
 		}
+		function typeIndex(str) {
+			switch (str) {
+				case '进化用': return 0;
+				case '平衡': return 1;
+				case '体力': return 2;
+				case '回复': return 3;
+				case '龙': return 4;
+				case '神': return 5;
+				case '攻击': return 6;
+				case '恶魔': return 7;
+				case '机械': return 8;
+				case '特别保护': return 9;
+				case '能力觉醒用': return 12;
+				case '强化合成用': return 14;
+				case '贩卖用': return 15;
+			}
+		}
 
 		if (dom.nodeType === Node.TEXT_NODE) {
 			let res;
@@ -318,32 +336,57 @@ body {
 				svg.appendChild(text);
 				dom.parentElement.insertBefore(svg, dom);
 			}
-			if (res = /受到的属性伤害减少(\d+)%/.exec(dom.nodeValue)) {
-				const svg = svgIcon('shield');
-				const text = document.createElementNS(svgNS,'text');
-				text.textContent = res[1];
-				text.setAttribute("x", "50%");
-				text.setAttribute("y", "50%");
-				text.setAttribute("fill", "white");
-				svg.appendChild(text);
-				dom.parentElement.insertBefore(svg, dom);
-			}
-			if (res = /将受到的(.+)属性伤害转换成自己的生命值/.exec(dom.nodeValue)) {
+			if (res = /受到的(.*)属性伤害减少(\d+)%/.exec(dom.nodeValue)) {
+				const all = !Boolean(res[1]);
 				const attrs = res[1].split("、");
-				for (const attrStr of attrs) {
-					const attr = attrIndex(attrStr);
-					const svg = svgIcon(`attr-${attr}`);
-					svg.appendSymbleIcon('recover');
+				for (let i = 0; i < attrs.length; i++) {
+					const attr = attrIndex(attrs[i]);
+					const svg = svgIcon('shield');
+					if (all) {
+						const text = document.createElementNS(svgNS,'text');
+						text.textContent = res[2];
+						text.setAttribute("x", "50%");
+						text.setAttribute("y", "50%");
+						text.setAttribute("fill", "white");
+						svg.appendChild(text);
+					} else {
+						const frontIcon = svg.appendSymbleIcon(`attr-${attr}`);
+						frontIcon.setAttribute('transform', 'scale(0.85) translate(2, 0)');
+					}
 					dom.parentElement.insertBefore(svg, dom);
 				}
 			}
-			if (res = /受到的(.+)属性伤害减少/.exec(dom.nodeValue)) {
-				const attrs = res[1].split("、");
-				for (const attrStr of attrs) {
-					const attr = attrIndex(attrStr);
+			if (res = /由(.+)宠物造成的伤害减少(\d+)%/.exec(dom.nodeValue)) {
+				const types = res[1].split(/[、和]/);
+				for (let i = 0; i < types.length; i++) {
+					const type = typeIndex(types[i].replace(/类$/,''));
 					const svg = svgIcon('shield');
-					svg.appendSymbleIcon(`attr-${attr}`);
+					const frontIcon = svg.appendSymbleIcon(`type-${type}`);
+					frontIcon.setAttribute('transform', 'scale(0.7) translate(5, 3)');
 					dom.parentElement.insertBefore(svg, dom);
+				}
+			}
+			if (res = /将(受到的|随机)(.+)属性伤害转换成自己的生命值/.exec(dom.nodeValue)) {
+				const random = res[1] == '随机';
+				const multiGroup = res[2].includes('/');
+				const attrs = multiGroup ? res[2].split("/").map(group=>Array.from(/「(.+?)」/mg.exec(group)[1])) : res[2].split("、");
+				for (let i=0;i<attrs.length;i++) {
+					if (multiGroup) { //成组的
+						attrs[i].forEach(attrStr=>{
+							const attr = attrIndex(attrStr);
+							const svg = svgIcon(`attr-${attr}`);
+							svg.appendSymbleIcon('recover');
+							dom.parentElement.insertBefore(svg, dom);
+						});
+						if (i<(attrs.length-1)) {
+							dom.parentElement.insertBefore(document.createTextNode('/'), dom);
+						}
+					} else {
+						const attr = random ? 'any' : attrIndex(attrs[i]);
+						const svg = svgIcon(`attr-${attr}`);
+						svg.appendSymbleIcon('recover');
+						dom.parentElement.insertBefore(svg, dom);
+					}
 				}
 			}
 			if (res = /技能的?冷却时间(增加|缩短)/.exec(dom.nodeValue)) {
@@ -381,17 +424,34 @@ body {
 				svg.appendChild(text);
 				dom.parentElement.insertBefore(svg, dom);
 			}
-			if (res = /宠物的攻击力变成原来的(\d+)%/.exec(dom.nodeValue)) {
+			if (res = /(宠物的)?攻击力变成原来的(\d+)%/.exec(dom.nodeValue)) {
+				const member = Boolean(res[1]);
+				const decrease = Number(res[2])<100;	
+				let svg = svgIcon(member ? 'assist-bind' : 'attr-any');
+				const frontIcon = svg.appendSymbleIcon(`member-atk-${decrease?'decrease':'increase'}`);
+				frontIcon.setAttribute('transform', `scale(0.75) translate(${member ? 4 : 10}, ${member ? 4 : (decrease? 10 : 0)})`);
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /回复力变成原来的(\d+)%/.exec(dom.nodeValue)) {
 				const decrease = Number(res[1])<100;
-				const svg = svgIcon(`member-atk-${decrease?'decrease':'increase'}`);
+				const svg = svgIcon('attr-5');
+				const frontIcon = svg.appendSymbleIcon(`member-atk-${decrease?'decrease':'increase'}`);
+				frontIcon.setAttribute('transform', `scale(0.75) translate(10, ${decrease? 10 : 0 })`);
 				dom.parentElement.insertBefore(svg, dom);
 			}
 			if (res = /辅助宠物无效化/.exec(dom.nodeValue)) {
 				const svg = svgIcon('assist-bind');
+				const frontIcon = svg.appendSymbleIcon(`bind`);
+				//frontIcon.setAttribute('transform', 'translate(0, 5)');
 				dom.parentElement.insertBefore(svg, dom);
 			}
-			if (res = /宝珠锁定|锁定掉落的宝珠/.exec(dom.nodeValue)) {
+			if (res = /宝珠锁定/.exec(dom.nodeValue)) {
 				const svg = svgIcon('lock');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /锁定掉落的宝珠/.exec(dom.nodeValue)) {
+				const svg = svgIcon('lock');
+				svg.appendSymbleIcon(`fall-down`);
 				dom.parentElement.insertBefore(svg, dom);
 			}
 			if (res = /攻击力提升至/.exec(dom.nodeValue)) {
@@ -431,6 +491,7 @@ body {
 			if (res = /掉落(弱体|强)化宝珠/.exec(dom.nodeValue)) {
 				const decline = res[1]=='弱体';
 				const svg = svgIcon(`orb-${decline?'decline':'enhance'}`);
+				svg.appendSymbleIcon(`fall-down`);
 				dom.parentElement.insertBefore(svg, dom);
 			}
 			if (res = /天降的宝珠不会产生COMBO/.exec(dom.nodeValue)) {
@@ -448,13 +509,6 @@ body {
 			if (res = /宝珠移动时间变成原来的(\d+)%/.exec(dom.nodeValue)) {
 				const decrease = Number(res[1])<100;
 				const svg = svgIcon(`move-time-${decrease?'decrease':'increase'}`);
-				dom.parentElement.insertBefore(svg, dom);
-			}
-			if (res = /回复力变成原来的(\d+)%/.exec(dom.nodeValue)) {
-				const decrease = Number(res[1])<100;
-				const svg = svgIcon('attr-5');
-				const frontIcon = svg.appendSymbleIcon(`member-atk-${decrease?'decrease':'increase'}`);
-				frontIcon.setAttribute('transform', 'scale(0.75) translate(10, 10)');
 				dom.parentElement.insertBefore(svg, dom);
 			}
 			if (res = /玩家的HP上限/.exec(dom.nodeValue)) {
@@ -475,6 +529,7 @@ body {
 			}
 			if (res = /掉落COMBO宝珠/.exec(dom.nodeValue)) {
 				const svg = svgIcon('orb-combo');
+				svg.appendSymbleIcon(`fall-down`);
 				dom.parentElement.insertBefore(svg, dom);
 			}
 			if (res = /随机转换自身的属性|将自身的属性转换成(.)/.exec(dom.nodeValue)) {
