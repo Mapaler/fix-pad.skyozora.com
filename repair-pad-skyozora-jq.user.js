@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.1.0
+// @version		2.1.1
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -307,17 +307,17 @@ body {
 			if (res = /异常状态（如毒、威吓、破防）无效化/.exec(dom.nodeValue)) {
 				dom.parentElement.insertBefore(svgIcon('abnormal-state-shield'), dom);
 			}
-			if (res = /将会以1点HP生还/.exec(dom.nodeValue)) {
-				dom.parentElement.insertBefore(svgIcon('resolve'), dom);
-			}
-			if (res = /将会以(\d+)%HP生还/.exec(dom.nodeValue)) {
-				const svg = svgIcon('super-resolve');
-				const text = document.createElementNS(svgNS,'text');
-				text.textContent = res[1];
-				text.setAttribute("x", "50%");
-				text.setAttribute("y", "50%");
-				text.setAttribute("fill", "white");
-				svg.appendChild(text);
+			if (res = /HP在上限\d+%或以上的话，受到致命伤害时，将会以(\d+)(点|%)HP生还/.exec(dom.nodeValue)) {
+				const superResolve = res[2] == '%';
+				const svg = svgIcon(superResolve ? 'super-resolve' : 'resolve');
+				if (superResolve) {
+					const text = document.createElementNS(svgNS,'text');
+					text.textContent = res[1];
+					text.setAttribute("x", "50%");
+					text.setAttribute("y", "50%");
+					text.setAttribute("fill", "white");
+					svg.appendChild(text);
+				}
 				dom.parentElement.insertBefore(svg, dom);
 			}
 			if (res = /单一伤害值.+点以上的伤害(吸收|无效)/.exec(dom.nodeValue)) {
@@ -366,8 +366,8 @@ body {
 					dom.parentElement.insertBefore(svg, dom);
 				}
 			}
-			if (res = /将(受到的|随机)(.+)属性伤害转换成自己的生命值/.exec(dom.nodeValue)) {
-				const random = res[1] == '随机';
+			if (res = /将(?:受到的)?(随机)?(.+)属性伤害转换成自己的生命值/.exec(dom.nodeValue)) {
+				const random = Boolean(res[1]);
 				const multiGroup = res[2].includes('/');
 				const attrs = multiGroup ? res[2].split("/").map(group=>Array.from(/「(.+?)」/mg.exec(group)[1])) : res[2].split("、");
 				for (let i=0;i<attrs.length;i++) {
