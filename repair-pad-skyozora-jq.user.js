@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.1.3
+// @version		2.1.4
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -470,7 +470,7 @@ body {
 				const svg = svgIcon('lock');
 				dom.parentElement.insertBefore(svg, dom);
 			}
-			if (res = /锁定掉落的宝珠/.exec(dom.nodeValue)) {
+			if (res = /锁定.*掉落/.exec(dom.nodeValue)) {
 				const svg = svgIcon('lock');
 				svg.appendSymbleIcon(`fall-down`);
 				dom.parentElement.insertBefore(svg, dom);
@@ -479,7 +479,7 @@ body {
 				const svg = svgIcon('angry');
 				dom.parentElement.insertBefore(svg, dom);
 			}
-			if (res = /云遮挡宝珠/.exec(dom.nodeValue)) {
+			if (res = /(遮挡宝珠的云|云遮挡宝珠)/.exec(dom.nodeValue)) {
 				const svg = svgIcon('cloud');
 				dom.parentElement.insertBefore(svg, dom);
 			}
