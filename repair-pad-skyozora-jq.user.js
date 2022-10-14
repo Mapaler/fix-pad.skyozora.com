@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.1.1
+// @version		2.1.2
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -160,7 +160,7 @@ body {
 		//====转简体====
 		// 将日文汉字转换为简体中文（中国大陆）
 		const converterJP2CN = OpenCC.Converter({ from: 'jp', to: 'cn' });
-		document.title = converterJP2CN(document.title);
+		document.title = converterJP2CN(document.title).replace(/^(.+) - (.+) - Puzzle & Dragons 战友系统及资讯网/,'$2 - $1');
 		// 将繁体中文（香港）转换为简体中文（中国大陆）
 		const converterHK2CN = OpenCC.Converter({ from: 'hk', to: 'cn' });
 		// 设置转换起点为根节点，即转换整个页面
@@ -367,25 +367,27 @@ body {
 				}
 			}
 			if (res = /将(?:受到的)?(随机)?(.+)属性伤害转换成自己的生命值/.exec(dom.nodeValue)) {
-				const random = Boolean(res[1]);
-				const multiGroup = res[2].includes('/');
-				const attrs = multiGroup ? res[2].split("/").map(group=>Array.from(/「(.+?)」/mg.exec(group)[1])) : res[2].split("、");
+				const random = Boolean(res[1]); //是否随机
+				const normalSplit = res[2].includes('、'); //是否是顿号的普通分割
+				const attrs = res[2].split(normalSplit ? "、" : "/" );
 				for (let i=0;i<attrs.length;i++) {
-					if (multiGroup) { //成组的
-						attrs[i].forEach(attrStr=>{
-							const attr = attrIndex(attrStr);
-							const svg = svgIcon(`attr-${attr}`);
-							svg.appendSymbleIcon('recover');
-							dom.parentElement.insertBefore(svg, dom);
-						});
-						if (i<(attrs.length-1)) {
-							dom.parentElement.insertBefore(document.createTextNode('/'), dom);
-						}
+					let attrStr = attrs[i], attrArr = [];
+					let multiReg = /「(.+?)」/mg.exec(attrStr);
+					if (multiReg) {
+						let str = multiReg[1];
+						attrArr = (str.includes('/') ? str.split('/') : Array.from(str)).map(attrIndex);
 					} else {
-						const attr = random ? 'any' : attrIndex(attrs[i]);
+						attrArr.push(attrIndex(attrStr));
+					}
+					
+					attrArr.forEach(attr=>{
+						if (random) attr = 'any';
 						const svg = svgIcon(`attr-${attr}`);
 						svg.appendSymbleIcon('recover');
 						dom.parentElement.insertBefore(svg, dom);
+					});
+					if (multiReg && i<(attrs.length-1)) {
+						dom.parentElement.insertBefore(document.createTextNode('/'), dom);
 					}
 				}
 			}
