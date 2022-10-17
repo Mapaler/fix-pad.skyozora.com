@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.1.4
+// @version		2.1.5
 // @description	解决无翻墙情况下智龙迷城战友网无法展开详情问题
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -103,25 +103,27 @@
 		
 		//插入总svg
 		const svgText = GM_getResourceText("icons"); //将svg文本读取出来
-		const parser = new DOMParser();
-		const iconsSvg = parser.parseFromString(svgText, "image/svg+xml"); //转换成svg文档
-		const svgDoc = iconsSvg.documentElement;
-		svgDoc.setAttribute("class","hide");
-		const symbols = Array.from(svgDoc.querySelectorAll('symbol'));
-		const [maxWidth, maxHeight] = symbols.reduce(([maxWidth, maxHeight], symble)=>{
-			const img = symble.querySelector('image');
-			return [
-				Math.max(maxWidth, img.width.baseVal.value),
-				Math.max(maxHeight, img.height.baseVal.value)
-			];
-		},[0,0]);
-
-		symbols.forEach(symble=>{
-			const img = symble.querySelector('image');
-			symble.setAttribute('viewBox', [(maxWidth - img.width.baseVal.value) / -2, (maxHeight - img.height.baseVal.value) / -2, maxWidth, maxHeight].join(" "));
-		});
-
-		document.body.insertAdjacentElement("afterbegin", svgDoc); //插入body
+		if (svgText) {
+			const parser = new DOMParser();
+			const iconsSvg = parser.parseFromString(svgText, "image/svg+xml"); //转换成svg文档
+			const svgDoc = iconsSvg.documentElement;
+			svgDoc.setAttribute("class","hide");
+			const symbols = Array.from(svgDoc.querySelectorAll('symbol'));
+			const [maxWidth, maxHeight] = symbols.reduce(([maxWidth, maxHeight], symble)=>{
+				const img = symble.querySelector('image');
+				return [
+					Math.max(maxWidth, img.width.baseVal.value),
+					Math.max(maxHeight, img.height.baseVal.value)
+				];
+			},[0,0]);
+	
+			symbols.forEach(symble=>{
+				const img = symble.querySelector('image');
+				symble.setAttribute('viewBox', [(maxWidth - img.width.baseVal.value) / -2, (maxHeight - img.height.baseVal.value) / -2, maxWidth, maxHeight].join(" "));
+			});
+	
+			document.body.insertAdjacentElement("afterbegin", svgDoc); //插入body
+		}
 
 		//====去除禁止复制内容的限制====
 		unsafeWindow.$('#StageInfo').parent().bind('click cut copy paste', function(event) {
