@@ -1,9 +1,10 @@
 // ==UserScript==
-// @name		Pad.Skyozora Enhance
-// @name:zh-CN	智龙迷城战友网增强
+// @name	智龙迷城战友网增强
+// @name:en		Pad.Skyozora Enhance
 // @namespace	http://www.mapaler.com/
 // @version		2.2.0
-// @description:zh-CN	地下城增加技能图标
+// @description	地下城增加技能图标
+// @description:en	Dungeons add skill icons
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
 // @icon		https://pad.skyozora.com/images/egg.ico
