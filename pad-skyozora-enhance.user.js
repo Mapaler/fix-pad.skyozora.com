@@ -1,10 +1,8 @@
 // ==UserScript==
-// @name	智龙迷城战友网增强
-// @name:en		Pad.Skyozora Enhance
+// @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
 // @version		2.2.0
 // @description	地下城增加技能图标
-// @description:en	Dungeons add skill icons
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
 // @icon		https://pad.skyozora.com/images/egg.ico
@@ -17,9 +15,9 @@
 // @resource	icons						https://raw.githubusercontent.com/Mapaler/fix-pad.skyozora.com/master/icons-symbol.svg?v=2.1
 //-@resource	icons						http://localhost:8080/icons-symbol.svg?16
 // @grant		GM_getResourceText
-// @grant       GM_registerMenuCommand
-// @grant       GM_getValue
-// @grant       GM_setValue
+// @grant		GM_registerMenuCommand
+// @grant		GM_getValue
+// @grant		GM_setValue
 // @grant		unsafeWindow
 // @run-at		document-start
 // ==/UserScript==
@@ -220,6 +218,7 @@ body {
 			if (ConciseMode) {
 				const styleConcise = document.head.appendChild(document.createElement("style"));
 				styleConcise.textContent = `
+.ats-skyscraper-wrapper,
 .fb-share-button,
 .twitter-tweet-button,
 .twitter-share-button,
