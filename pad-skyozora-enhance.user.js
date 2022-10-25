@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.2.0
+// @version		2.2.1
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
 // @icon		https://pad.skyozora.com/images/egg.ico
 // @match		*://pad.skyozora.com/*
-// @resource	jquery						https://lib.baomitu.com/jquery/1.8.3/jquery.min.js
+// @resource	jquery						https://cdn.bootcdn.net/ajax/libs/jquery/1.8.3/jquery.min.js
 // @resource	opencc-js-data				https://unpkg.com/opencc-js@1.0.4/data.js
 // @resource	opencc-js-data.cn2t			https://unpkg.com/opencc-js@1.0.4/data.cn2t.js
 // @resource	opencc-js-data.t2cn			https://unpkg.com/opencc-js@1.0.4/data.t2cn.js
@@ -74,62 +74,60 @@
 	});
 
 	//大数字缩短长度
-	if (/^(zh|ja|ko)\b/i.test(navigator.language)) { //中、日、韩习惯
-		Number.prototype.bigNumberToString = function() {
-			const negative = this < 0;
-		
-			let numTemp = negative ? Math.abs(this) : this.valueOf();
-			if (!numTemp) return "0";
-			const grouping = 1e4;
-			const unit = ['','萬','億','兆','京','垓'];
-			const numParts = [];
-			do {
-				numParts.push(numTemp % grouping);
-				numTemp = Math.floor(numTemp / grouping);
-			} while (numTemp > 0 && numParts.length < (unit.length - 1))
-			if (numTemp > 0) {
-				numParts.push(numTemp);
-			}
-			let numPartsStr = numParts.map((num, idx) => {
-				if (num > 0) {
-					return (num < 1e3 ? "零" : "") + num + unit[idx];
-				} else
-					return "零";
-			});
-		
-			numPartsStr.reverse(); //反向
-			let outStr = numPartsStr.join("");
-			outStr = outStr.replace(/(^零+|零+$)/g, ''); //去除开头的零
-			outStr = outStr.replace(/零{2,}/g, '零'); //去除多个连续的零
-			return (negative ? "-" : "") + outStr;
+	Number.prototype.bigNumberToString = /^(zh|ja|ko)\b/i.test(navigator.language) ?
+	(function() { //中、日、韩习惯
+		const negative = this < 0;
+	
+		let numTemp = negative ? Math.abs(this) : this.valueOf();
+		if (!numTemp) return "0";
+		const grouping = 1e4;
+		const unit = ['','萬','億','兆','京','垓'];
+		const numParts = [];
+		do {
+			numParts.push(numTemp % grouping);
+			numTemp = Math.floor(numTemp / grouping);
+		} while (numTemp > 0 && numParts.length < (unit.length - 1))
+		if (numTemp > 0) {
+			numParts.push(numTemp);
 		}
-	} else { //英语习惯
-		Number.prototype.bigNumberToString = function() {
-			const negative = this < 0;
-		
-			let numTemp = negative ? Math.abs(this) : this.valueOf();
-			if (!numTemp) return "0";
-			const grouping = 1e3;
-			const unit = ['', 'K', 'M', 'G', 'T', 'P'];
-			const numParts = [];
-			do {
-				numParts.push(numTemp % grouping);
-				numTemp = Math.floor(numTemp / grouping);
-			} while (numTemp > 0 && numParts.length < (unit.length - 1))
-			if (numTemp > 0) {
-				numParts.push(numTemp);
-			}
-			let numPartsStr = numParts.map((num, idx) => {
-				if (num > 0) {
-					return num + unit[idx];
-				} else
-					return "";
-			});
-		
-			let outStr = numPartsStr.filter(Boolean).reverse().join(" ");
-			return (negative ? "-" : "") + outStr;
+		let numPartsStr = numParts.map((num, idx) => {
+			if (num > 0) {
+				return (num < 1e3 ? "零" : "") + num + unit[idx];
+			} else
+				return "零";
+		});
+	
+		numPartsStr.reverse(); //反向
+		let outStr = numPartsStr.join("");
+		outStr = outStr.replace(/(^零+|零+$)/g, ''); //去除开头的零
+		outStr = outStr.replace(/零{2,}/g, '零'); //去除多个连续的零
+		return (negative ? "-" : "") + outStr;
+	}) :
+	(function() { //英语习惯
+		const negative = this < 0;
+	
+		let numTemp = negative ? Math.abs(this) : this.valueOf();
+		if (!numTemp) return "0";
+		const grouping = 1e3;
+		const unit = ['', 'K', 'M', 'G', 'T', 'P'];
+		const numParts = [];
+		do {
+			numParts.push(numTemp % grouping);
+			numTemp = Math.floor(numTemp / grouping);
+		} while (numTemp > 0 && numParts.length < (unit.length - 1))
+		if (numTemp > 0) {
+			numParts.push(numTemp);
 		}
-	}
+		let numPartsStr = numParts.map((num, idx) => {
+			if (num > 0) {
+				return num + unit[idx];
+			} else
+				return "";
+		});
+	
+		let outStr = numPartsStr.filter(Boolean).reverse().join(" ");
+		return (negative ? "-" : "") + outStr;
+	});
 	
 	const bootstrap = function(){
 		
@@ -194,6 +192,27 @@ body {
     dominant-baseline: middle;
     /* 文本垂直居中 */
 }
+.tooltip[href^="pets/"]::after
+{
+	display: inline-block;
+	vertical-align: middle;
+	content: "No."attr(data-id)"\\000A"attr(data-name);
+	white-space: pre;
+	line-height: 1em;
+}
+.tooltip[href="pets/"]::after
+{
+	content: unset;
+}
+tr[align="center"] .tooltip[href^="pets/"]::after
+{
+	display: block;
+	max-width: 70px;
+	white-space: pre-wrap;
+}
+.paddf-link:link {
+	text-decoration: underline;
+}
 `;
 		// 将和制汉字转换为简体中文（中国大陆）
 		const converterJP2CN = OpenCC.Converter({ from: 'jp', to: 'cn' });
@@ -209,14 +228,16 @@ body {
 			['マシン', '機械'],
 			['ドラゴン', '龍'],
 			['バランス', '平衡'],
+			['リーダー', '队长'],
+			['助っ人', '辅助'],
 		]);
 
 		//====大数字加上中文字符====
 		//地下城页面
 		if (/^\/stage\//.test(location.pathname))
 		{
-			if (ConciseMode) {
-				const styleConcise = document.head.appendChild(document.createElement("style"));
+			if (ConciseMode) { //添加精简模式的CSS
+				const styleConcise = document.createElement("style");
 				styleConcise.textContent = `
 .ats-skyscraper-wrapper,
 .fb-share-button,
@@ -233,8 +254,8 @@ body {
 #wrapper > table > tbody > tr > td > .OUTBRAIN
 {
 	display: none !important;
-}
-		`;
+}`;
+				document.head.appendChild(styleConcise);
 			}
 			let pageTitle = document.title;
 			pageTitle = pageTitle.replace(/^(.+)\s*-\s*(.+)\s*-\s*Puzzle & Dragons 戰友系統及資訊網/,
@@ -253,6 +274,27 @@ body {
 				stageTitle.lang = 'jp';
 				const HTMLConvertHandler = OpenCC.HTMLConverter(T2S ? converterJP2CN : converterJP2HK, stageTitle, 'jp', T2S ? 'zh-CN' : 'zh-HK');
 				HTMLConvertHandler.convert();
+			}
+			const stageTeam = document.body.querySelector("#StageInfo>div");
+			if (stageTeam.textContent.includes("本地下城採用系統預設隊伍"))
+			{
+				const cardAvatars = Array.from(stageTeam.querySelectorAll(':scope>a[href^="pets/"]'));
+				const cardIds = cardAvatars.map(avatar=>{
+					let hrefReg = /pets\/(\d+)/i.exec(avatar.href);
+					return hrefReg?.[1] || 0;
+				});
+				console.log(cardAvatars, cardIds);
+
+				const formationOutObj = {f: [[cardIds.map(id=>id>0?[id,99]:null), []]], v: 4};
+				const PADDFurl = new URL("https://mapaler.github.io/PADDashFormation/solo.html");
+				PADDFurl.searchParams.set("d", JSON.stringify(formationOutObj));
+				
+				const PADDFlink = document.createElement("a");
+				PADDFlink.className = "paddf-link";
+				PADDFlink.href = PADDFurl;
+				PADDFlink.target = "_blank";
+				PADDFlink.textContent = "PADDashFormation 组队链接";
+				stageTeam.appendChild(PADDFlink);
 			}
 
 			const stageDetail = document.body.querySelector("#StageInfo>table:nth-of-type(2)");
@@ -288,6 +330,17 @@ body {
 					for (let skillDamage of skillDamages)
 					{
 						domBigNumToString(skillDamage);
+					}
+				}
+
+				//先制数字
+				const cardAvatars = [...stageDetail.tBodies[0].querySelectorAll('.tooltip[href^="pets/"]')];
+				for (let avatar of cardAvatars)
+				{
+					let titleReg = /(\d+)\s*\-\s*(.+)/i.exec(avatar.title);
+					if (titleReg) {
+						avatar.dataset.id = titleReg[1];
+						avatar.dataset.name = T2S ? converterHK2CN(titleReg[2]) : titleReg[2];
 					}
 				}
 			}
