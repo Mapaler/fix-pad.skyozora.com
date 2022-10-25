@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.2.1
+// @version		2.2.2
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -222,6 +222,7 @@ tr[align="center"] .tooltip[href^="pets/"]::after
 		const converterHK2CN = OpenCC.Converter({ from: 'hk', to: 'cn' });
 		// 将类型的假名转换为繁体中文（中国香港）
 		const converterKANA2CN = OpenCC.CustomConverter([
+			['のみ', '限定'],
 			['の', '的'],
 			['タイプ', '類型'],
 			['キャラ', '角色'],
@@ -230,6 +231,7 @@ tr[align="center"] .tooltip[href^="pets/"]::after
 			['バランス', '平衡'],
 			['リーダー', '队长'],
 			['助っ人', '辅助'],
+			['ハンター', '猎人'],
 		]);
 
 		//====大数字加上中文字符====
