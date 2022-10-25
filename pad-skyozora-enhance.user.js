@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.2.2
+// @version		2.2.4
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -167,7 +167,7 @@
 		const styleDom = document.head.appendChild(document.createElement("style"));
 		styleDom.textContent = `
 * {
-	font-family: "Microsoft Yahei", "Microsoft JhengHei", "Source Han Sans", Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic !important;
+	font-family: "Microsoft Yahei", "Microsoft JhengHei", "Source Han Sans", Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic;
 	color: white;
 }
 body {
@@ -192,7 +192,7 @@ body {
     dominant-baseline: middle;
     /* 文本垂直居中 */
 }
-.tooltip[href^="pets/"]::after
+.tooltip[href*="pets/"]::after
 {
 	display: inline-block;
 	vertical-align: middle;
@@ -200,11 +200,11 @@ body {
 	white-space: pre;
 	line-height: 1em;
 }
-.tooltip[href="pets/"]::after
+.tooltip[href$="pets/"]::after
 {
 	content: unset;
 }
-tr[align="center"] .tooltip[href^="pets/"]::after
+tr[align="center"] .tooltip[href*="pets/"]::after
 {
 	display: block;
 	max-width: 70px;
@@ -212,6 +212,29 @@ tr[align="center"] .tooltip[href^="pets/"]::after
 }
 .paddf-link:link {
 	text-decoration: underline;
+}
+.enhance-board {
+	border-collapse: collapse;
+	background-color: #532;
+}
+.enhance-board tr>td
+{
+	width: 12px;
+	height: 12px;
+}
+.enhance-board tr:nth-of-type(2n+1)>td:nth-of-type(2n+1),
+.enhance-board tr:nth-of-type(2n)>td:nth-of-type(2n)
+{
+	background-color: rgba(0,0,0,0.4);
+}
+.enhance-board .orb-true::before
+{
+	display: block;
+	content: "";
+	background-color: white;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
 }
 `;
 		// 将和制汉字转换为简体中文（中国大陆）
@@ -277,6 +300,7 @@ tr[align="center"] .tooltip[href^="pets/"]::after
 				const HTMLConvertHandler = OpenCC.HTMLConverter(T2S ? converterJP2CN : converterJP2HK, stageTitle, 'jp', T2S ? 'zh-CN' : 'zh-HK');
 				HTMLConvertHandler.convert();
 			}
+			//提供固定队伍可跳转到PADDashFormation
 			const stageTeam = document.body.querySelector("#StageInfo>div");
 			if (stageTeam.textContent.includes("本地下城採用系統預設隊伍"))
 			{
@@ -347,7 +371,39 @@ tr[align="center"] .tooltip[href^="pets/"]::after
 				}
 			}
 			//直接打开所有隐藏内容
-			Array.from(document.body.querySelectorAll("[onclick^=open_]")).forEach(i=>i.click());
+			const hiddenSkills = Array.from(document.body.querySelectorAll("[onclick^=open_]"));
+			hiddenSkills.forEach(i=>i.click());
+
+			//强化版面位置的显示
+			const boardsNode = Array.from(document.body.querySelectorAll('#StageInfo [onclick^="open_menu"]+[id^="skill"]'));
+			boardsNode.forEach(node=>{
+				node.classList.add("boards");
+				const boardDataCells = node.querySelectorAll(":scope table tr:nth-of-type(2)>td");
+				boardDataCells.forEach(cell=>{
+					const data = cell.textContent.split('\n').map(row=>Array.from(row).map(o=>Boolean(o=='●')));
+					const boardTable = createBoard(data);
+					cell.innerHTML = '';
+					cell.appendChild(boardTable);
+				})
+				if (node.nextElementSibling.nodeName == "BR") {
+					node.nextElementSibling.remove();
+				}
+			});
+			function createBoard(data) {
+				const table = document.createElement("table");
+				table.className = `enhance-board`;
+				for (let ri=0; ri<data.length; ri++)
+				{
+					const orbsRow = data[ri];
+					const row = table.insertRow();
+					for (let ci=0; ci<orbsRow.length; ci++)
+					{
+						const cell = row.insertCell();
+						cell.className = `orb-${orbsRow[ci]}`;
+					}
+				}
+				return table;
+			}
 		}
 		//新闻页面，主要是针对于8人本页面
 		if (/^\/news\//.test(location.pathname))
