@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.2.4
+// @version		2.2.5
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -192,7 +192,7 @@ body {
     dominant-baseline: middle;
     /* 文本垂直居中 */
 }
-.tooltip[href*="pets/"]::after
+.tooltip[href*="pets/"][data-id]::after
 {
 	display: inline-block;
 	vertical-align: middle;
@@ -200,7 +200,8 @@ body {
 	white-space: pre;
 	line-height: 1em;
 }
-.tooltip[href$="pets/"]::after
+.tooltip[href$="pets/"]::after,
+.tooltip:not([data-id])::after
 {
 	content: unset;
 }
@@ -257,6 +258,16 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 			['ハンター', '猎人'],
 		]);
 
+		//所有带名字的头像
+		const cardAvatars = [...document.body.querySelectorAll('.tooltip[href^="pets/"]')];
+		cardAvatars.forEach(avatar=>{
+			let titleReg = /(\d+)\s*\-\s*(.+)/i.exec(avatar.title);
+			if (titleReg) {
+				avatar.dataset.id = titleReg[1];
+				avatar.dataset.name = T2S ? converterHK2CN(titleReg[2]) : titleReg[2];
+			}
+		})
+		
 		//====大数字加上中文字符====
 		//地下城页面
 		if (/^\/stage\//.test(location.pathname))
@@ -302,7 +313,7 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 			}
 			//提供固定队伍可跳转到PADDashFormation
 			const stageTeam = document.body.querySelector("#StageInfo>div");
-			if (stageTeam.textContent.includes("本地下城採用系統預設隊伍"))
+			if (stageTeam?.textContent?.includes("本地下城採用系統預設隊伍"))
 			{
 				const cardAvatars = Array.from(stageTeam.querySelectorAll(':scope>a[href^="pets/"]'));
 				const cardIds = cardAvatars.map(avatar=>{
@@ -356,17 +367,6 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 					for (let skillDamage of skillDamages)
 					{
 						domBigNumToString(skillDamage);
-					}
-				}
-
-				//先制数字
-				const cardAvatars = [...stageDetail.tBodies[0].querySelectorAll('.tooltip[href^="pets/"]')];
-				for (let avatar of cardAvatars)
-				{
-					let titleReg = /(\d+)\s*\-\s*(.+)/i.exec(avatar.title);
-					if (titleReg) {
-						avatar.dataset.id = titleReg[1];
-						avatar.dataset.name = T2S ? converterHK2CN(titleReg[2]) : titleReg[2];
 					}
 				}
 			}
