@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.2.5
+// @version		2.2.6
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -170,6 +170,9 @@
 	font-family: "Microsoft Yahei", "Microsoft JhengHei", "Source Han Sans", Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic;
 	color: white;
 }
+#wrapper {
+	width: 100%;
+}
 body {
 	background:#222 ;
 }
@@ -290,6 +293,10 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 #wrapper > table > tbody > tr > td > .OUTBRAIN
 {
 	display: none !important;
+}
+#wrapper > table:nth-of-type(3)
+{
+	width: auto;
 }`;
 				document.head.appendChild(styleConcise);
 			}
@@ -561,7 +568,7 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 					dom.parentElement.insertBefore(svg, dom);
 				}
 			}
-			if (res = /將(?:受到的)?(隨機一種|其中一種|1種)?(.*)屬性傷害轉換成自己的生命值/.exec(dom.nodeValue)) {
+			if (res = /將(?:受到的)?(?:隨機|其中)?([一\d]種)?(.*)屬性傷害轉換成自己的生命值/.exec(dom.nodeValue)) {
 				if (Boolean(res[1])) { //如果随机
 				   const svg = svgIcon(`attr-any`);
 				   svg.appendSymbleIcon('recover');
