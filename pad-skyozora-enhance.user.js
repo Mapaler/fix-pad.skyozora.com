@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.2.6
+// @version		2.2.7
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -170,8 +170,8 @@
 	font-family: "Microsoft Yahei", "Microsoft JhengHei", "Source Han Sans", Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic;
 	color: white;
 }
-#wrapper {
-	width: 100%;
+#container .item2 {
+	display: none;
 }
 body {
 	background:#222 ;
@@ -277,25 +277,25 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 		{
 			if (ConciseMode) { //添加精简模式的CSS
 				const styleConcise = document.createElement("style");
-				styleConcise.textContent = `
-.ats-skyscraper-wrapper,
+				styleConcise.textContent = 
+`.ats-skyscraper-wrapper,
 .fb-share-button,
 .twitter-tweet-button,
 .twitter-share-button,
-#fb-root,
-.menuBackground,
-#toTop,
-#wrapper > p,
-#wrapper > br,
+body > :not(#wrapper),
+#wrapper > :not(table),
 #wrapper > table:not(:nth-of-type(3)),
-#wrapper > table > tbody > tr > td:not(:nth-of-type(1)),
-#wrapper > table > tbody > tr > td > br,
-#wrapper > table > tbody > tr > td > .OUTBRAIN
+#wrapper > table:nth-of-type(3) > tbody > tr > td:nth-of-type(n+2),
+#wrapper > table:nth-of-type(3) > tbody > tr > td:first-of-type > div:not(:nth-of-type(2)),
+#wrapper #StageInfo > div:first-of-type
 {
 	display: none !important;
 }
-#wrapper > table:nth-of-type(3)
-{
+#wrapper {
+	width: 100%;
+	padding: 0;
+}
+#wrapper > table:nth-of-type(3) {
 	width: auto;
 }`;
 				document.head.appendChild(styleConcise);
