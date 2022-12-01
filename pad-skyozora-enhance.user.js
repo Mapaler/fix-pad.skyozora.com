@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.3.0
+// @version		2.3.1
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -32,6 +32,7 @@
 	
 	let T2S = GM_getValue("traditional-to-simplified") ?? true; //繁转简
 	let ConciseMode = GM_getValue("dungeon-style-concise") ?? true; //简洁模式
+	let storeAvatar = GM_getValue("local-store-card-avatar") ?? true; //数据库里储存怪物头像
 
 	//监听head的加载，代码来源于 EhTagSyringe
 	const headLoaded = new Promise(function (resolve, reject) {
@@ -264,7 +265,7 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 		]);
 
 		//本地数据库储存头像;
-		redirectLocalCardAvatar();
+		if (storeAvatar) redirectLocalCardAvatar();
 
 		//所有带名字的头像添加名字
 		const cardAvatars = [...document.body.querySelectorAll('.tooltip[href^="pets/"]')];
@@ -801,6 +802,10 @@ body > :not(#wrapper),
 	GM_registerMenuCommand(`${ConciseMode?"关闭":"开启"}-地下城简洁模式`, function(){
 		alert(`${ConciseMode?"关闭":"开启"}地下城简洁模式后，刷新页面生效。`);
 		GM_setValue("dungeon-style-concise", !ConciseMode);
+	});
+	GM_registerMenuCommand(`${storeAvatar?"关闭":"开启"}-在本地数据库储存怪物头像`, function(){
+		alert(`${storeAvatar?"关闭":"开启"}本地数据库储存怪物头像后，刷新页面生效。`);
+		GM_setValue("local-store-card-avatar", !storeAvatar);
 	});
 
 	//加载document后执行启动器
