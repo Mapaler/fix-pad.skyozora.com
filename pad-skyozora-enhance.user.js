@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.2.7
+// @version		2.3.0
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -161,9 +161,11 @@
 		}
 
 		//====去除禁止复制内容的限制====
-		unsafeWindow.$('#StageInfo').parent().bind('click cut copy paste', function(event) {
-			unsafeWindow.$('#StageInfo').unbind(); //调用jQ自身的去掉绑定
-		});
+		if (unsafeWindow.$) {
+			unsafeWindow.$('#StageInfo').parent().bind('click cut copy paste', function(event) {
+				unsafeWindow.$('#StageInfo').unbind(); //调用jQ自身的去掉绑定
+			});
+		}
 		const styleDom = document.head.appendChild(document.createElement("style"));
 		styleDom.textContent = `
 * {
@@ -261,7 +263,10 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 			['ハンター', '猎人'],
 		]);
 
-		//所有带名字的头像
+		//本地数据库储存头像;
+		redirectLocalCardAvatar();
+
+		//所有带名字的头像添加名字
 		const cardAvatars = [...document.body.querySelectorAll('.tooltip[href^="pets/"]')];
 		cardAvatars.forEach(avatar=>{
 			let titleReg = /(\d+)\s*\-\s*(.+)/i.exec(avatar.title);
@@ -273,7 +278,7 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 		
 		//====大数字加上中文字符====
 		//地下城页面
-		if (/^\/stage\//.test(location.pathname))
+		if (/^\/stage\b/.test(location.pathname))
 		{
 			if (ConciseMode) { //添加精简模式的CSS
 				const styleConcise = document.createElement("style");
@@ -286,7 +291,8 @@ body > :not(#wrapper),
 #wrapper > :not(table),
 #wrapper > table:not(:nth-of-type(3)),
 #wrapper > table:nth-of-type(3) > tbody > tr > td:nth-of-type(n+2),
-#wrapper > table:nth-of-type(3) > tbody > tr > td:first-of-type > div:not(:nth-of-type(2)),
+#wrapper > table:nth-of-type(3) > tbody > tr > td:first-of-type > #fb-root,
+#wrapper #StageInfo ~ *,
 #wrapper #StageInfo > div:first-of-type
 {
 	display: none !important;
@@ -802,5 +808,99 @@ body > :not(#wrapper),
 		bootstrap();
 	}else{
 		document.addEventListener('DOMContentLoaded',bootstrap,false);
+	}
+
+	async function redirectLocalCardAvatar(){
+		function loadDatabase(dbName, dbVersion) {
+			return new Promise(function(resolve, reject) {
+				const DBOpenRequest = indexedDB.open(dbName, dbVersion);
+				DBOpenRequest.onsuccess = function(event) {
+					resolve(event.target.result); //DBOpenRequest.result;
+					console.debug(GM_info.script.name, "数据库已可使用");
+				};
+				DBOpenRequest.onerror = function(event) {
+					// 错误处理
+					console.error(GM_info.script.name, "数据库无法启用，删除可能存在的异常数据库。",event);
+					indexedDB.deleteDatabase(dbName); //直接把整个数据库删掉
+					console.error("也可能是隐私模式导致无法启用数据库，于是尝试不保存的情况下读取数据。");
+					reject(event);
+				};
+				DBOpenRequest.onupgradeneeded = function(event) {
+					let db = event.target.result;
+				
+					let store;
+					store = db.createObjectStore("cards_avatar");
+				
+					// 使用事务的 oncomplete 事件确保在插入数据前对象仓库已经创建完毕
+					store.transaction.oncomplete = function(event) {
+						console.log(GM_info.script.name, "数据库建立完毕");
+					};
+				};
+			});
+		}
+
+		const dbName = "pad-skyozora-enhance";
+		const tableName = "cards_avatar";
+		const dbVersion = 1;
+		let db = await loadDatabase(dbName, dbVersion);
+
+		function putImageBlob(blob, key) {
+			return new Promise(function(resolve, reject) {
+				const transaction = db.transaction([tableName], "readwrite");
+				const objectStore = transaction.objectStore(tableName);
+				const put = objectStore.put(blob, key);
+				put.onsuccess = function (event) {
+					const imgURL = URL.createObjectURL(blob);
+					resolve(imgURL);
+				};
+				put.onerror = function (event) {
+					reject(false);
+				};
+			});
+		}
+		function getImageBlobURL(key) {
+			return new Promise(function(resolve, reject) {
+				const transaction = db.transaction([tableName], "readwrite");
+				const objectStore = transaction.objectStore(tableName);
+				const get = objectStore.get(key);
+				get.onsuccess = function(event) {
+					const blob = event.target.result;
+					if (blob == undefined) {
+						resolve(false);
+						return;
+					}
+					const imgURL = URL.createObjectURL(blob);
+					resolve(imgURL);
+				};
+				get.onerror = function(event) {
+					reject(false);
+				};
+			});
+		}
+
+		function getId(src) {
+			const regres = src.match(/pets\/(\d+)\.png/i);
+			return parseInt(regres[1],10);
+			//return `card-avatar-${regres[1]}`;
+		}
+		const cardAvatars = Array.from(document.querySelectorAll('img:where([src^="images/pets"],[data-original^="images/pets"])'));
+		cardAvatars.forEach(async avatar=>{
+			const src = avatar.dataset.original ?? avatar.src;
+			const cardId = getId(src);
+			//console.log("configId",configId);
+			let avatarURL = await getImageBlobURL(cardId);
+			if (!avatarURL) {
+				console.debug('数据库中未获取到 No.%d 的头像数据，开始下载。', cardId);
+				let response = await fetch(src);
+				let blob = await response.blob();
+				avatarURL = await putImageBlob(blob, cardId);
+				console.debug(' No.%d 的头像数据下载成功。', cardId);
+			} else {
+				//console.debug('直接使用数据库中获取到的 No.%d 的头像数据。', cardId);
+			}
+			avatar.dataset.id = cardId;
+			if (avatar.dataset.original) avatar.dataset.original = avatarURL;
+			avatar.src = avatarURL;
+		});
 	}
 })();
