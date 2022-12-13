@@ -1,19 +1,15 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.3.1
+// @version		2.3.2
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
 // @icon		https://pad.skyozora.com/images/egg.ico
 // @match		*://pad.skyozora.com/*
-// @resource	jquery						https://cdn.bootcdn.net/ajax/libs/jquery/1.8.3/jquery.min.js
-// @resource	opencc-js-data				https://unpkg.com/opencc-js@1.0.4/data.js
-// @resource	opencc-js-data.cn2t			https://unpkg.com/opencc-js@1.0.4/data.cn2t.js
-// @resource	opencc-js-data.t2cn			https://unpkg.com/opencc-js@1.0.4/data.t2cn.js
-// @resource	opencc-js-bundle-browser	https://unpkg.com/opencc-js@1.0.4/bundle-browser.js
-// @resource	icons						https://raw.githubusercontent.com/Mapaler/fix-pad.skyozora.com/master/icons-symbol.svg?v=2.1
-//-@resource	icons						http://localhost:8080/icons-symbol.svg?16
+// @require		https://unpkg.com/opencc-js@1.0.5/dist/umd/full.js
+// @resource	jquery	https://cdn.bootcdn.net/ajax/libs/jquery/1.8.3/jquery.min.js
+// @resource	icons	https://www.gitlink.org.cn/repo/mapaler/fix-pad_skyozora_com/raw/branch/master/icons-symbol.svg
 // @grant		GM_getResourceText
 // @grant		GM_registerMenuCommand
 // @grant		GM_getValue
@@ -59,17 +55,16 @@
 
 	//head加载后添加国内的JQ源
 	headLoaded.then(head=>{
+		document.querySelector('script[src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"]')?.remove();
 		[
 			'jquery',
-			'opencc-js-data',
-			'opencc-js-data.cn2t',
-			'opencc-js-data.t2cn',
-			'opencc-js-bundle-browser',
 		].forEach(resName=>{
+			let scriptText = GM_getResourceText(resName);
+			if (!scriptText) return;
 			const script = document.createElement("script");
 			script.id = resName;
 			script.type = "text/javascript";
-			script.innerHTML = GM_getResourceText(resName);
+			script.innerHTML = scriptText;
 			head.appendChild(script);
 		});
 	});
