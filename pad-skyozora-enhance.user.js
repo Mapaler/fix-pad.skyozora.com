@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.3.2
+// @version		2.3.3
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -288,8 +288,7 @@ body > :not(#wrapper),
 #wrapper > table:not(:nth-of-type(3)),
 #wrapper > table:nth-of-type(3) > tbody > tr > td:nth-of-type(n+2),
 #wrapper > table:nth-of-type(3) > tbody > tr > td:first-of-type > #fb-root,
-#wrapper #StageInfo ~ *,
-#wrapper #StageInfo > div:first-of-type
+#wrapper #StageInfo ~ *
 {
 	display: none !important;
 }
