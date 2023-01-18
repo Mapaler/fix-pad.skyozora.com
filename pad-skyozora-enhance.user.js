@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.3.3
+// @version		2.3.4
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -276,10 +276,11 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 		//地下城页面
 		if (/^\/stage\b/.test(location.pathname))
 		{
+			const pcPage = document.querySelector("#wrapper");
 			if (ConciseMode) { //添加精简模式的CSS
 				const styleConcise = document.createElement("style");
-				styleConcise.textContent = 
-`.ats-skyscraper-wrapper,
+				styleConcise.textContent = pcPage
+? `.ats-skyscraper-wrapper,
 .fb-share-button,
 .twitter-tweet-button,
 .twitter-share-button,
@@ -298,7 +299,16 @@ body > :not(#wrapper),
 }
 #wrapper > table:nth-of-type(3) {
 	width: auto;
-}`;
+}`
+: `body > :not(.content),
+.content>p:empty,
+.content>center,
+#StageInfo>br,
+#StageInfo>div:empty
+{
+	display: none !important;
+}`
+;
 				document.head.appendChild(styleConcise);
 			}
 			let pageTitle = document.title;
