@@ -248,7 +248,6 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 		// 将类型的假名转换为繁体中文（中国香港）
 		const converterKANA2CN = OpenCC.CustomConverter([
 			['のみ', '限定'],
-			['の', '的'],
 			['タイプ', '類型'],
 			['キャラ', '角色'],
 			['マシン', '機械'],
@@ -257,6 +256,8 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 			['リーダー', '队长'],
 			['助っ人', '辅助'],
 			['ハンター', '猎人'],
+			['の', '的'],
+			['と', '与'],
 		]);
 
 		//本地数据库储存头像;
