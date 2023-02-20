@@ -305,8 +305,9 @@ body > :not(#wrapper),
 				document.head.appendChild(styleConcise);
 			}
 			let pageTitle = document.title;
+			const JpHTMLConverter = T2S ? converterJP2CN : converterJP2HK;
 			pageTitle = pageTitle.replace(/^(.+)\s*-\s*(.+)\s*-\s*Puzzle & Dragons 戰友系統及資訊網/,
-				(match, p1, p2) => `${converterKANA2CN(p2)} - ${converterKANA2CN(p1)}` );
+				(match, p1, p2) => `${converterKANA2CN(JpHTMLConverter(p2))} - ${converterKANA2CN(JpHTMLConverter(p1))}` );
 			document.title = pageTitle;
 			const stageTitle = document.body.querySelector("#StageInfo>h2");
 			if (stageTitle)
@@ -319,7 +320,7 @@ body > :not(#wrapper),
 
 				//和制汉字到中文
 				stageTitle.lang = 'jp';
-				const HTMLConvertHandler = OpenCC.HTMLConverter(T2S ? converterJP2CN : converterJP2HK, stageTitle, 'jp', T2S ? 'zh-CN' : 'zh-HK');
+				const HTMLConvertHandler = OpenCC.HTMLConverter(JpHTMLConverter, stageTitle, 'jp', T2S ? 'zh-CN' : 'zh-HK');
 				HTMLConvertHandler.convert();
 			}
 			//提供固定队伍可跳转到PADDashFormation
