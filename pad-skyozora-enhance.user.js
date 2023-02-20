@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.3.7
+// @version		2.4.0
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -159,13 +159,6 @@
 			document.body.insertAdjacentElement("afterbegin", svgDoc); //插入body
 		}
 
-		//====去除禁止复制内容的限制====
-		let StageInfo = document.querySelector('#StageInfo');
-		let unbidFunctionStr = "$(`#${this.id}`).unbind(); this.removeAttribute('oncopy'); this.removeAttribute('oncut'); this.removeAttribute('onpaste');";
-		StageInfo.setAttribute("oncopy", unbidFunctionStr);
-		StageInfo.setAttribute("oncut", unbidFunctionStr);
-		StageInfo.setAttribute("onpaste", unbidFunctionStr);
-
 		const styleDom = document.head.appendChild(document.createElement("style"));
 		styleDom.textContent = `
 * {
@@ -243,6 +236,16 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 	height: 12px;
 	border-radius: 50%;
 }
+.skill-detail summary{
+	font-size:14px;
+	color: #99E8FF;
+}
+.board-position summary{
+	width: max-content;
+	padding: 0 5px;
+	border-radius: 5px;
+	background-color: #F252A1;
+}
 `;
 		// 将和制汉字转换为简体中文（中国大陆）
 		const converterJP2CN = OpenCC.Converter({ from: 'jp', to: 'cn' });
@@ -263,6 +266,8 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 			['ハンター', '猎人'],
 			['の', '的'],
 			['と', '与'],
+			['ラッシュ', 'Rush'],
+			['コロシアム', 'Coliseum'],
 		]);
 
 		//本地数据库储存头像;
@@ -278,10 +283,16 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 			}
 		})
 		
-		//====大数字加上中文字符====
 		//地下城页面
 		if (/^\/stage\b/.test(location.pathname))
 		{
+			//====去除禁止复制内容的限制====
+			const StageInfo = document.querySelector('#StageInfo');
+			let unbidFunctionStr = "$(`#${this.id}`).unbind(); this.removeAttribute('oncopy'); this.removeAttribute('oncut'); this.removeAttribute('onpaste');";
+			StageInfo.setAttribute("oncopy", unbidFunctionStr);
+			StageInfo.setAttribute("oncut", unbidFunctionStr);
+			StageInfo.setAttribute("onpaste", unbidFunctionStr);
+
 			const pcPage = document.querySelector("#wrapper");
 			if (ConciseMode) { //添加精简模式的CSS
 				const styleConcise = document.createElement("style");
@@ -313,7 +324,8 @@ body > :not(#wrapper),
 #StageInfo>div:empty
 {
 	display: none !important;
-}`
+}
+`
 ;
 				document.head.appendChild(styleConcise);
 			}
@@ -322,7 +334,7 @@ body > :not(#wrapper),
 			pageTitle = pageTitle.replace(/^(.+)\s*-\s*(.+)\s*-\s*Puzzle & Dragons 戰友系統及資訊網/,
 				(match, p1, p2) => `${converterKANA2CN(JpHTMLConverter(p2))} - ${converterKANA2CN(JpHTMLConverter(p1))}` );
 			document.title = pageTitle;
-			const stageTitle = document.body.querySelector("#StageInfo>h2");
+			const stageTitle = StageInfo.querySelector(":scope>h2");
 			if (stageTitle)
 			{
 				//和制汉字到繁体
@@ -337,7 +349,7 @@ body > :not(#wrapper),
 				HTMLConvertHandler.convert();
 			}
 			//提供固定队伍可跳转到PADDashFormation
-			const stageTeam = document.body.querySelector("#StageInfo>div");
+			const stageTeam = StageInfo.querySelector(":scope>div");
 			if (stageTeam?.textContent?.includes("本地下城採用系統預設隊伍"))
 			{
 				const cardAvatars = Array.from(stageTeam.querySelectorAll(':scope>a[href^="pets/"]'));
@@ -359,7 +371,7 @@ body > :not(#wrapper),
 				stageTeam.appendChild(PADDFlink);
 			}
 
-			const stageDetail = document.body.querySelector("#StageInfo>table:nth-of-type(2)");
+			const stageDetail = StageInfo.querySelector(":scope>table:nth-of-type(2)");
 			if (stageDetail)
 			{
 				//HP和防御条
@@ -395,12 +407,9 @@ body > :not(#wrapper),
 					}
 				}
 			}
-			//直接打开所有隐藏内容
-			const hiddenSkills = Array.from(document.body.querySelectorAll("[onclick^=open_]"));
-			hiddenSkills.forEach(i=>i.click());
 
 			//强化版面位置的显示
-			const boardsNode = Array.from(document.body.querySelectorAll('#StageInfo [onclick^="open_menu"]+[id^="skill"]'));
+			const boardsNode = Array.from(StageInfo.querySelectorAll('[onclick^="open_menu"]+[id^="skill"]'));
 			boardsNode.forEach(node=>{
 				node.classList.add("boards");
 				const boardDataCells = node.querySelectorAll(":scope table tr:nth-of-type(2)>td");
@@ -429,6 +438,25 @@ body > :not(#wrapper),
 				}
 				return table;
 			}
+
+			//直接打开所有隐藏内容
+			const hiddenSkillsSwitch = Array.from(document.body.querySelectorAll("[onclick^=open_]"));
+			hiddenSkillsSwitch.forEach(i=>i.remove()); //删除所有开关
+			
+			const hiddenSkills = Array.from(document.querySelectorAll('[id^="skill"]')).filter(i=>i.style.display);
+			hiddenSkills.forEach(i=>{
+				const boardPos = /skill(\d+_){4}\d+/.test(i.id);
+				const detail = document.createElement("details");
+				detail.className = boardPos ? "board-position" : "skill-detail";
+				detail.open = true;
+				detail.id = i.id;
+				const summary = detail.appendChild(document.createElement("summary"));
+				summary.textContent = boardPos ? "生成位置" : "敌人技能资料" ;
+
+				detail.append(...i.childNodes);
+				i.parentNode.insertBefore(detail, i);
+				i.remove();
+			});
 		}
 		//新闻页面，主要是针对于8人本页面
 		if (/^\/news\//.test(location.pathname))
@@ -726,7 +754,7 @@ body > :not(#wrapper),
 				const svg = svgIcon('shield');
 				svg.appendSymbleIcon(`text-defense`);
 				fragment.append(svg);
-				fragment.append(`盾${Math.round((1-100/Number(res[1]))*10000)/100}%）`);
+				fragment.append(`盾>${Math.round((1-100/Number(res[1]))*10000)/100}%）`);
 				dom.parentElement.insertBefore(fragment, dom.nextSibling);
 			}
 			if (res = /掉落(弱體|强)化寶珠/.exec(dom.nodeValue)) {
