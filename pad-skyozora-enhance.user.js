@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.3.6
+// @version		2.3.7
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -14,6 +14,7 @@
 // @grant		GM_registerMenuCommand
 // @grant		GM_getValue
 // @grant		GM_setValue
+// @grant		unsafeWindow
 // @run-at		document-start
 // ==/UserScript==
 
@@ -52,18 +53,24 @@
 
 	//head加载后添加国内的JQ源
 	headLoaded.then(head=>{
-		document.querySelector('script[src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"]')?.remove();
-		[
-			'jquery',
-		].forEach(resName=>{
-			let scriptText = GM_getResourceText(resName);
-			if (!scriptText) return;
-			const script = document.createElement("script");
-			script.id = resName;
-			script.type = "text/javascript";
-			script.innerHTML = scriptText;
-			head.appendChild(script);
-		});
+		let jqElement = document.querySelector('script[src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"]');
+		if (jqElement) {
+			jqElement.src = "https://cdn.bootcdn.net/ajax/libs/jquery/1.8.3/jquery.min.js";
+			console.debug('替换外链 jQuery 路径');
+		} else {
+			console.debug('直接内嵌 jQuery');
+			[
+				'jquery',
+			].forEach(resName=>{
+				let scriptText = GM_getResourceText(resName);
+				if (!scriptText) return;
+				const script = document.createElement("script");
+				script.id = resName;
+				script.type = "text/javascript";
+				script.innerHTML = scriptText;
+				head.appendChild(script);
+			});
+		}
 	});
 
 	//大数字缩短长度
@@ -123,7 +130,6 @@
 	});
 	
 	const bootstrap = function(){
-		
 		if (!mobileMode) {
 			document.styleSheets[0].deleteRule(1);
 			document.styleSheets[0].deleteRule(0);
@@ -152,6 +158,13 @@
 	
 			document.body.insertAdjacentElement("afterbegin", svgDoc); //插入body
 		}
+
+		//====去除禁止复制内容的限制====
+		let StageInfo = document.querySelector('#StageInfo');
+		let unbidFunctionStr = "$(`#${this.id}`).unbind(); this.removeAttribute('oncopy'); this.removeAttribute('oncut'); this.removeAttribute('onpaste');";
+		StageInfo.setAttribute("oncopy", unbidFunctionStr);
+		StageInfo.setAttribute("oncut", unbidFunctionStr);
+		StageInfo.setAttribute("onpaste", unbidFunctionStr);
 
 		const styleDom = document.head.appendChild(document.createElement("style"));
 		styleDom.textContent = `
