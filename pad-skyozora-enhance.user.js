@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.4.0
+// @version		2.4.1
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -264,10 +264,12 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 			['リーダー', '队长'],
 			['助っ人', '辅助'],
 			['ハンター', '猎人'],
-			['の', '的'],
-			['と', '与'],
 			['ラッシュ', 'Rush'],
 			['コロシアム', 'Coliseum'],
+			['ボス', 'BOSS '],
+
+			['の', '的'],
+			['と', '与'],
 		]);
 
 		//本地数据库储存头像;
