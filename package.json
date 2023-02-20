@@ -1,8 +1,8 @@
 {
   "dependencies": {
-    "@xmldom/xmldom": "^0.8.3",
+    "@xmldom/xmldom": "^0.8.6",
     "mime": "^3.0.0",
-    "sharp": "^0.31.1",
-    "xml-formatter": "^2.6.1"
+    "sharp": "^0.31.3",
+    "xml-formatter": "^3.2.0"
   }
 }

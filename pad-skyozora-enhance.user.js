@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.3.5
+// @version		2.3.6
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -9,20 +9,17 @@
 // @match		*://pad.skyozora.com/*
 // @require		https://unpkg.com/opencc-js@1.0.5/dist/umd/full.js
 // @resource	jquery	https://cdn.bootcdn.net/ajax/libs/jquery/1.8.3/jquery.min.js
-// @resource	icons	https://www.gitlink.org.cn/repo/mapaler/fix-pad_skyozora_com/raw/branch/master/icons-symbol.svg
+// @resource	icons	https://www.gitlink.org.cn/repo/mapaler/fix-pad_skyozora_com/raw/branch/master/icons-symbol.svg?v=2.3.6
 // @grant		GM_getResourceText
 // @grant		GM_registerMenuCommand
 // @grant		GM_getValue
 // @grant		GM_setValue
-// @grant		unsafeWindow
 // @run-at		document-start
 // ==/UserScript==
 
 (async function() {
 	'use strict';
 	const svgNS = "http://www.w3.org/2000/svg"; //svg用的命名空间
-
-	const MutationObserver = unsafeWindow.MutationObserver;
 
 	let mobileMode = /\bmobile\b/i.test(navigator.userAgent);
 	
@@ -156,17 +153,12 @@
 			document.body.insertAdjacentElement("afterbegin", svgDoc); //插入body
 		}
 
-		//====去除禁止复制内容的限制====
-		if (unsafeWindow.$) {
-			unsafeWindow.$('#StageInfo').parent().bind('click cut copy paste', function(event) {
-				unsafeWindow.$('#StageInfo').unbind(); //调用jQ自身的去掉绑定
-			});
-		}
 		const styleDom = document.head.appendChild(document.createElement("style"));
 		styleDom.textContent = `
 * {
 	font-family: "Microsoft Yahei", "Microsoft JhengHei", "Source Han Sans", Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic;
 	color: white;
+	user-select: auto !important;
 }
 #container .item2 {
 	display: none;
@@ -793,9 +785,14 @@ body > :not(#wrapper),
 			}
 			if (res = /回到可以承受傷害的狀態/.exec(dom.nodeValue)) {
 				const svg = svgIcon('invincible');
-				dom.parentElement.insertBefore(svg, dom);
 				const frontIcon = svg.appendSymbleIcon(`bind`);
 				frontIcon.setAttribute('transform', 'translate(0, 5)');
+				dom.parentElement.insertBefore(svg, dom);
+			}
+			if (res = /(掉落|出現)荊棘/.exec(dom.nodeValue)) {
+				const svg = svgIcon('thorn');
+				if (res[1] == '掉落') svg.appendSymbleIcon(`fall-down`);
+				dom.parentElement.insertBefore(svg, dom);
 			}
 		}
 	}

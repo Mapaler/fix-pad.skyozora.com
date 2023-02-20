@@ -1,2 +1,3 @@
 /node_modules
 /run http-server.bat
+/package-lock.json
