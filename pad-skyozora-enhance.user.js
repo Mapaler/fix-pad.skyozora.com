@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.4.1
+// @version		2.4.2
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -450,7 +450,7 @@ body > :not(#wrapper),
 				const boardPos = /skill(\d+_){4}\d+/.test(i.id);
 				const detail = document.createElement("details");
 				detail.className = boardPos ? "board-position" : "skill-detail";
-				detail.open = true;
+				detail.open = boardPos;
 				detail.id = i.id;
 				const summary = detail.appendChild(document.createElement("summary"));
 				summary.textContent = boardPos ? "生成位置" : "敌人技能资料" ;
