@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.4.2
+// @version		2.4.3
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -235,6 +235,9 @@ tr[align="center"] .tooltip[href*="pets/"]::after
 	width: 12px;
 	height: 12px;
 	border-radius: 50%;
+}
+details summary{
+	cursor: pointer;
 }
 .skill-detail summary{
 	font-size:14px;
