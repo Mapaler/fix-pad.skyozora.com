@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.5.0
+// @version		2.5.1
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -562,7 +562,6 @@ body > :not(#wrapper),
 		}
 		//用于查找下一个文本节点
 		function nextTextNode(node) {
-			// console.count('nextTextNode查询次数');
 			const nextNode = node.nextSibling;
 			if (nextNode == null ||
 				nextNode.nodeType === Node.TEXT_NODE && nextNode.length > 0) {
@@ -860,9 +859,7 @@ body > :not(#wrapper),
 				dom.parentElement.insertBefore(svg, dom);
 			}
 			if (res = /\d+回合內，$/.exec(dom.nodeValue) && dom.nextElementSibling.nodeName == 'IMG') {
-				// console.count('nextTextNode查询次数');
 				const nextText = nextTextNode(dom);
-				console.log(nextText);
 				if (/無法被消除/.exec(nextText.nodeValue)) {
 					const svg = svgIcon('bind');
 					dom.parentElement.insertBefore(svg, dom);
@@ -871,7 +868,6 @@ body > :not(#wrapper),
 					const svg = svgIcon('fall-down');
 					dom.parentElement.insertBefore(svg, dom);
 				}
-				// console.countReset('nextTextNode查询次数');
 			}
 		}
 	}
