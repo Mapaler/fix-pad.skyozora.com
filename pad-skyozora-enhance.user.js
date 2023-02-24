@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.5.1
+// @version		2.5.2
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -9,7 +9,7 @@
 // @match		*://pad.skyozora.com/*
 // @require		https://unpkg.com/opencc-js@1.0.5/dist/umd/full.js
 // @resource	jquery	https://cdn.bootcdn.net/ajax/libs/jquery/1.8.3/jquery.min.js
-// @resource	icons	https://www.gitlink.org.cn/repo/mapaler/fix-pad_skyozora_com/raw/branch/master/icons-symbol.svg?v=2.5.0
+// @resource	icons	https://www.gitlink.org.cn/repo/mapaler/fix-pad_skyozora_com/raw/branch/v2.5.0/icons-symbol.svg
 // @grant		GM_getResourceText
 // @grant		GM_registerMenuCommand
 // @grant		GM_getValue
@@ -271,6 +271,8 @@ details summary{
 			['ラッシュ', 'Rush '],
 			['コロシアム', 'Coliseum '],
 			['ボス', 'BOSS '],
+			['ノーコン', '无法续关'],
+
 			['ヘラ', '赫拉'],
 			['ゼウス', '宙斯'],
 			['アテナ', '雅典娜'],
