@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.4.3
+// @version		2.5.0
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -9,7 +9,7 @@
 // @match		*://pad.skyozora.com/*
 // @require		https://unpkg.com/opencc-js@1.0.5/dist/umd/full.js
 // @resource	jquery	https://cdn.bootcdn.net/ajax/libs/jquery/1.8.3/jquery.min.js
-// @resource	icons	https://www.gitlink.org.cn/repo/mapaler/fix-pad_skyozora_com/raw/branch/master/icons-symbol.svg?v=2.3.6
+// @resource	icons	https://www.gitlink.org.cn/repo/mapaler/fix-pad_skyozora_com/raw/branch/master/icons-symbol.svg?v=2.5.0
 // @grant		GM_getResourceText
 // @grant		GM_registerMenuCommand
 // @grant		GM_getValue
@@ -26,6 +26,7 @@
 	
 	let T2S = GM_getValue("traditional-to-simplified") ?? true; //繁转简
 	let ConciseMode = GM_getValue("dungeon-style-concise") ?? true; //简洁模式
+	let OpenAllDetails = GM_getValue("open-all-details") ?? false; //自动展开所有详情
 	let storeAvatar = GM_getValue("local-store-card-avatar") ?? true; //数据库里储存怪物头像
 
 	//监听head的加载，代码来源于 EhTagSyringe
@@ -267,9 +268,14 @@ details summary{
 			['リーダー', '队长'],
 			['助っ人', '辅助'],
 			['ハンター', '猎人'],
-			['ラッシュ', 'Rush'],
-			['コロシアム', 'Coliseum'],
+			['ラッシュ', 'Rush '],
+			['コロシアム', 'Coliseum '],
 			['ボス', 'BOSS '],
+			['ヘラ', '赫拉'],
+			['ゼウス', '宙斯'],
+			['アテナ', '雅典娜'],
+			['からくり', '机关'],
+			['ノア', '诺亚'],
 
 			['の', '的'],
 			['と', '与'],
@@ -453,7 +459,7 @@ body > :not(#wrapper),
 				const boardPos = /skill(\d+_){4}\d+/.test(i.id);
 				const detail = document.createElement("details");
 				detail.className = boardPos ? "board-position" : "skill-detail";
-				detail.open = boardPos;
+				detail.open = OpenAllDetails ? true : boardPos;
 				detail.id = i.id;
 				const summary = detail.appendChild(document.createElement("summary"));
 				summary.textContent = boardPos ? "生成位置" : "敌人技能资料" ;
@@ -554,7 +560,17 @@ body > :not(#wrapper),
 				case '販賣用': return 15;
 			}
 		}
-
+		//用于查找下一个文本节点
+		function nextTextNode(node) {
+			// console.count('nextTextNode查询次数');
+			const nextNode = node.nextSibling;
+			if (nextNode == null ||
+				nextNode.nodeType === Node.TEXT_NODE && nextNode.length > 0) {
+				return nextNode;
+			} else {
+				return nextTextNode(nextNode);
+			}
+		}
 		if (dom.nodeType === Node.TEXT_NODE) {
 			let res;
 			if (res = /異常狀態（如毒、威嚇、破防）無效化/.exec(dom.nodeValue)) {
@@ -752,13 +768,15 @@ body > :not(#wrapper),
 				dom.parentElement.insertBefore(svg, dom);
 			}
 			if (res = /造成玩家目前HP(\d+)%的傷害/.exec(dom.nodeValue)) {
+				const svg1 = svgIcon('gravity');
+				dom.parentElement.insertBefore(svg1, dom);
 				const damage = Number(res[1]);
 				if (damage < 100) return; //小于100的重力不需要盾
 				const fragment = document.createDocumentFragment();
 				fragment.append(`（需要`);
-				const svg = svgIcon('shield');
-				svg.appendSymbleIcon(`text-defense`);
-				fragment.append(svg);
+				const svg2 = svgIcon('shield');
+				svg2.appendSymbleIcon(`text-defense`);
+				fragment.append(svg2);
 				fragment.append(`盾>${Math.round((1-100/Number(res[1]))*10000)/100}%）`);
 				dom.parentElement.insertBefore(fragment, dom.nextSibling);
 			}
@@ -822,10 +840,10 @@ body > :not(#wrapper),
 				const svg = svgIcon('heal');
 				dom.parentElement.insertBefore(svg, dom);
 			}
-			if (res = /消除玩家所有BUFF技能效果/.exec(dom.nodeValue)) {
-				const svg = svgIcon('bind');
-				dom.parentElement.insertBefore(svg, dom);
-			}
+			// if (res = /消除玩家所有BUFF技能效果/.exec(dom.nodeValue)) {
+			// 	const svg = svgIcon('bind');
+			// 	dom.parentElement.insertBefore(svg, dom);
+			// }
 			if (res = /變成不會受到任何傷害的狀態/.exec(dom.nodeValue)) {
 				const svg = svgIcon('invincible');
 				dom.parentElement.insertBefore(svg, dom);
@@ -841,6 +859,20 @@ body > :not(#wrapper),
 				if (res[1] == '掉落') svg.appendSymbleIcon(`fall-down`);
 				dom.parentElement.insertBefore(svg, dom);
 			}
+			if (res = /\d+回合內，$/.exec(dom.nodeValue) && dom.nextElementSibling.nodeName == 'IMG') {
+				// console.count('nextTextNode查询次数');
+				const nextText = nextTextNode(dom);
+				console.log(nextText);
+				if (/無法被消除/.exec(nextText.nodeValue)) {
+					const svg = svgIcon('bind');
+					dom.parentElement.insertBefore(svg, dom);
+				}
+				if (/掉落機率提升/.exec(nextText.nodeValue)) {
+					const svg = svgIcon('fall-down');
+					dom.parentElement.insertBefore(svg, dom);
+				}
+				// console.countReset('nextTextNode查询次数');
+			}
 		}
 	}
 
@@ -851,6 +883,10 @@ body > :not(#wrapper),
 	GM_registerMenuCommand(`${ConciseMode?"关闭":"开启"}-地下城简洁模式`, function(){
 		alert(`${ConciseMode?"关闭":"开启"}地下城简洁模式后，刷新页面生效。`);
 		GM_setValue("dungeon-style-concise", !ConciseMode);
+	});
+	GM_registerMenuCommand(`${OpenAllDetails?"关闭":"开启"}-自动展开所有详情`, function(){
+		alert(`${OpenAllDetails?"关闭":"开启"}自动展开所有详情后，刷新页面生效。`);
+		GM_setValue("open-all-details", !OpenAllDetails);
 	});
 	GM_registerMenuCommand(`${storeAvatar?"关闭":"开启"}-在本地数据库储存怪物头像`, function(){
 		alert(`${storeAvatar?"关闭":"开启"}本地数据库储存怪物头像后，刷新页面生效。`);
