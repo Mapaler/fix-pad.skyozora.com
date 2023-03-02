@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.5.3
+// @version		2.5.4
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -163,7 +163,7 @@
 		const styleDom = document.head.appendChild(document.createElement("style"));
 		styleDom.textContent = `
 * {
-	font-family: "Microsoft Yahei", "Microsoft JhengHei", "Source Han Sans", Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic;
+	font-family: "Microsoft Yahei", "Microsoft JhengHei", "Source Han Sans", Arial, Helvetica, sans-serif, "Malgun Gothic", "맑은 고딕", "Gulim", AppleGothic !important;
 	color: white;
 	user-select: auto !important;
 }
@@ -500,6 +500,7 @@ body > :not(#wrapper),
 
 	function domBigNumToString(dom)
 	{
+		if (!(dom instanceof Node)) return;
 		const regOriginal = /\b-?\d+(?:,\d{3})*\b/g;
 
 		if (dom.nodeType === Node.TEXT_NODE) {
