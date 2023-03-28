@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		智龙迷城战友网增强
 // @namespace	http://www.mapaler.com/
-// @version		2.5.4
+// @version		2.5.5
 // @description	地下城增加技能图标
 // @author		Mapaler <mapaler@163.com>
 // @copyright	2019+, Mapaler <mapaler@163.com>
@@ -297,11 +297,11 @@ details summary{
 			}
 		})
 		
+		const StageInfo = document.querySelector('#StageInfo');
 		//地下城页面
-		if (/^\/stage\b/.test(location.pathname))
+		if (/^\/stage\b/.test(location.pathname) && StageInfo)
 		{
 			//====去除禁止复制内容的限制====
-			const StageInfo = document.querySelector('#StageInfo');
 			let unbidFunctionStr = "$(`#${this.id}`).unbind(); this.removeAttribute('oncopy'); this.removeAttribute('oncut'); this.removeAttribute('onpaste');";
 			StageInfo.setAttribute("oncopy", unbidFunctionStr);
 			StageInfo.setAttribute("oncut", unbidFunctionStr);
